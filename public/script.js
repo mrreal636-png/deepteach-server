@@ -601,6 +601,11 @@ async function renderAdmin(filter = null) {
         </div>
         <div id="admin-course-content"></div>`;
 
+    // زر تغيير كلمة مرور الأدمن
+    html += `<div style="margin-top:20px; display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn btn-primary" onclick="showChangePasswordModal()">🔑 تغيير كلمة مرور الأدمن</button>
+    </div>`;
+
     mainContent.innerHTML = html;
 
     const gradeSel = document.getElementById('admin-grade');
@@ -646,6 +651,61 @@ async function renderAdmin(filter = null) {
     addOption.value = '__add_new__';
     addOption.textContent = '➕ إضافة مادة جديدة';
     subjSel.appendChild(addOption);
+}
+
+// ========== تغيير كلمة مرور الأدمن ==========
+function showChangePasswordModal() {
+    document.getElementById('changePasswordModal').style.display = 'flex';
+    document.getElementById('passwordChangeMsg').textContent = '';
+}
+
+async function changeAdminPassword() {
+    const current = document.getElementById('current-password').value.trim();
+    const newPass = document.getElementById('new-password').value.trim();
+    const confirm = document.getElementById('confirm-password').value.trim();
+    const msg = document.getElementById('passwordChangeMsg');
+
+    if (!current || !newPass || !confirm) {
+        msg.textContent = '⚠️ يرجى ملء جميع الحقول';
+        return;
+    }
+    if (newPass !== confirm) {
+        msg.textContent = '⚠️ كلمة المرور الجديدة وتأكيدها غير متطابقين';
+        return;
+    }
+    if (newPass.length < 6) {
+        msg.textContent = '⚠️ كلمة المرور الجديدة يجب أن تكون 6 أحرف على الأقل';
+        return;
+    }
+
+    msg.textContent = '⏳ جاري التغيير...';
+    msg.style.color = '#f59e0b';
+
+    try {
+        const res = await fetch('/api/admin/change-password', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ currentPassword: current, newPassword: newPass })
+        });
+        const data = await res.json();
+        if (data.error) {
+            msg.textContent = '❌ ' + data.error;
+            msg.style.color = '#ef4444';
+        } else {
+            msg.textContent = '✅ ' + data.message;
+            msg.style.color = '#4ade80';
+            document.getElementById('current-password').value = '';
+            document.getElementById('new-password').value = '';
+            document.getElementById('confirm-password').value = '';
+            setTimeout(() => {
+                document.getElementById('changePasswordModal').style.display = 'none';
+                alert('✅ تم تغيير كلمة المرور بنجاح! استخدم كلمة المرور الجديدة في下次 تسجيل الدخول.');
+            }, 1500);
+        }
+    } catch (error) {
+        msg.textContent = '❌ خطأ في الاتصال بالخادم';
+        msg.style.color = '#ef4444';
+    }
 }
 
 // ========== إضافة مادة مباشرة ==========
@@ -975,6 +1035,7 @@ function toggleContactField() {
     document.getElementById('contact-field').style.display = plan === 'paid' ? 'block' : 'none';
 }
 
+// ========== جعل الدوال عالمية ==========
 window.toggleBanUser = toggleBanUser;
 window.setUserPlan = setUserPlan;
 window.deleteUser = deleteUser;
@@ -1003,3 +1064,5 @@ window.nextExamQuestion = nextExamQuestion;
 window.startLessonView = startLessonView;
 window.showSendNotification = showSendNotification;
 window.toggleNotifications = toggleNotifications;
+window.showChangePasswordModal = showChangePasswordModal;
+window.changeAdminPassword = changeAdminPassword;

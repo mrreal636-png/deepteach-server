@@ -119,6 +119,20 @@
         </div>
     </div>
 
+    <!-- ===== نافذة تغيير كلمة مرور الأدمن ===== -->
+    <div id="changePasswordModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:9999; align-items:center; justify-content:center;">
+        <div style="background:rgba(20,20,50,0.95); border-radius:20px; padding:30px; width:90%; max-width:400px; border:1px solid rgba(108,99,255,0.3);">
+            <h3 style="color:#f59e0b;"><i class="fas fa-key"></i> تغيير كلمة مرور الأدمن</h3>
+            <p style="color:#94a3b8; font-size:0.9rem; margin-bottom:1.5rem;">أدخل كلمة المرور الحالية والجديدة</p>
+            <input id="current-password" class="input-field" type="password" placeholder="كلمة المرور الحالية">
+            <input id="new-password" class="input-field" type="password" placeholder="كلمة المرور الجديدة">
+            <input id="confirm-password" class="input-field" type="password" placeholder="تأكيد كلمة المرور الجديدة">
+            <button class="btn" style="width:100%; margin-top:10px;" onclick="changeAdminPassword()">تغيير كلمة المرور</button>
+            <button class="btn btn-outline" style="width:100%; margin-top:8px;" onclick="document.getElementById('changePasswordModal').style.display='none'">إلغاء</button>
+            <div id="passwordChangeMsg" class="msg" style="margin-top:10px;"></div>
+        </div>
+    </div>
+
     <script src="script.js"></script>
 </body>
 </html>

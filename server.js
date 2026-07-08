@@ -15,19 +15,17 @@ if (!MONGODB_URI) {
 }
 
 console.log('🔗 محاولة الاتصال بقاعدة البيانات...');
-console.log(`📌 الرابط المستخدم: ${MONGODB_URI.replace(/\/\/.*@/, '//****:****@')}`); // إخفاء كلمة المرور في السجلات
+console.log(`📌 الرابط المستخدم: ${MONGODB_URI.replace(/\/\/.*@/, '//****:****@')}`);
 
 // ========== الاتصال بقاعدة البيانات ==========
 mongoose.connect(MONGODB_URI, {
-    serverSelectionTimeoutMS: 10000, // 10 ثوانٍ مهلة اختيار الخادم
+    serverSelectionTimeoutMS: 10000,
     connectTimeoutMS: 10000,
     socketTimeoutMS: 45000,
 })
 .then(() => {
     console.log('✅ تم الاتصال بقاعدة البيانات بنجاح');
-    // تهيئة البيانات الأولية بعد الاتصال
     initDatabase();
-    // بدء تشغيل السيرفر بعد نجاح الاتصال
     startServer();
 })
 .catch(err => {
@@ -417,6 +415,33 @@ app.post('/api/notifications', async (req, res) => {
     }
 });
 
+// ========== تغيير كلمة مرور الأدمن ==========
+app.put('/api/admin/change-password', async (req, res) => {
+    try {
+        const { currentPassword, newPassword } = req.body;
+
+        if (!currentPassword || !newPassword) {
+            return res.status(400).json({ error: 'يرجى إرسال كلمة المرور الحالية والجديدة' });
+        }
+        if (newPassword.length < 6) {
+            return res.status(400).json({ error: 'كلمة المرور الجديدة يجب أن تكون 6 أحرف على الأقل' });
+        }
+
+        const admin = await User.findOne({ username: 'admin', password: currentPassword });
+        if (!admin) {
+            return res.status(401).json({ error: 'كلمة المرور الحالية غير صحيحة' });
+        }
+
+        admin.password = newPassword;
+        await admin.save();
+
+        res.json({ success: true, message: 'تم تغيير كلمة مرور الأدمن بنجاح' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'خطأ في الخادم' });
+    }
+});
+
 // ========== تهيئة البيانات الأولية ==========
 async function initDatabase() {
     try {
@@ -472,7 +497,7 @@ function startServer() {
     });
 }
 
-// ========== الصفحة الرئيسية (للمسارات غير API) ==========
+// ========== الصفحة الرئيسية ==========
 app.use((req, res, next) => {
     if (req.path.startsWith('/api')) {
         return res.status(404).json({ error: 'Not found' });
