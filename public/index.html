@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeepTeach - المنصة التعليمية التفاعلية</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- واجهة تسجيل الدخول -->
+    <div id="login-overlay" class="login-overlay">
+        <div class="login-container">
+            <div class="login-tabs">
+                <button class="tab-btn active" data-tab="login">تسجيل الدخول</button>
+                <button class="tab-btn" data-tab="register">حساب جديد</button>
+            </div>
+            <div class="tab-content" id="login-tab">
+                <h2><i class="fas fa-sign-in-alt"></i> دخول</h2>
+                <input type="text" id="login-username" placeholder="اسم المستخدم" class="input-field">
+                <input type="password" id="login-password" placeholder="كلمة المرور" class="input-field">
+                <button class="btn full-width" id="login-btn">دخول</button>
+                <p id="login-msg" class="msg"></p>
+            </div>
+            <div class="tab-content hidden" id="register-tab">
+                <h2><i class="fas fa-user-plus"></i> تسجيل</h2>
+                <input type="text" id="reg-username" placeholder="اسم المستخدم" class="input-field">
+                <input type="password" id="reg-password" placeholder="كلمة المرور" class="input-field">
+                <div class="plan-select">
+                    <label class="plan-option">
+                        <input type="radio" name="plan" value="free" checked onchange="toggleContactField()"> مجانية
+                    </label>
+                    <label class="plan-option">
+                        <input type="radio" name="plan" value="paid" onchange="toggleContactField()"> مدفوعة
+                    </label>
+                </div>
+                <div id="contact-field" style="display:none;">
+                    <input type="text" id="reg-contact" placeholder="رقم الهاتف أو البريد للتواصل" class="input-field">
+                </div>
+                <button class="btn full-width" id="register-btn">تسجيل</button>
+                <p id="reg-msg" class="msg"></p>
+            </div>
+            <p class="note">حساب الأدمن: <strong>admin / admin</strong></p>
+        </div>
+    </div>
+
+    <!-- الموقع الرئيسي -->
+    <div id="app-main" class="app-main hidden">
+        <header class="topbar">
+            <div class="logo">
+                <i class="fas fa-graduation-cap"></i> DeepTeach
+            </div>
+            <div class="search-wrapper">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" id="searchInput" class="search-bar" placeholder="ابحث عن مادة أو صف...">
+                <div class="search-results" id="searchResults"></div>
+            </div>
+            <div class="user-area">
+                <span id="user-display"></span>
+                <button id="upgrade-btn" class="btn btn-sm btn-outline" style="display:none;" onclick="requestUpgrade()">ترقية</button>
+                <i class="fas fa-bell notification-bell" id="notification-bell" onclick="toggleNotifications()"></i>
+                <div class="notifications-dropdown" id="notifications-dropdown" style="display:none;"></div>
+                <button class="btn btn-outline btn-sm" id="logout-btn"><i class="fas fa-sign-out-alt"></i> خروج</button>
+            </div>
+        </header>
+
+        <div class="hamburger" id="hamburger">
+            <i class="fas fa-bars"></i>
+        </div>
+
+        <nav class="sidebar" id="sidebar">
+            <div class="nav-section">
+                <div class="nav-title">القائمة الرئيسية</div>
+                <div class="nav-item active" data-nav="home">
+                    <i class="fas fa-home icon"></i> الرئيسية
+                </div>
+                <div class="nav-item" data-nav="grades">
+                    <i class="fas fa-layer-group icon"></i> الصفوف الدراسية
+                </div>
+                <div class="nav-item" data-nav="progress">
+                    <i class="fas fa-chart-line icon"></i> تقدمي
+                </div>
+                <div class="nav-item" data-nav="about">
+                    <i class="fas fa-info-circle icon"></i> عن المنصة
+                </div>
+                <div class="nav-item" data-nav="projects">
+                    <i class="fas fa-project-diagram icon"></i> مشاريعنا
+                </div>
+                <div class="nav-item" data-nav="contact">
+                    <i class="fas fa-envelope icon"></i> اتصل بنا
+                </div>
+                <div class="nav-item admin-only" data-nav="admin">
+                    <i class="fas fa-crown icon"></i> لوحة الإدارة
+                </div>
+            </div>
+            <div class="sidebar-footer">
+                <div class="xp-mini">
+                    <i class="fas fa-star"></i> <span id="xpValue">0 XP</span>
+                </div>
+            </div>
+        </nav>
+
+        <main class="main-content" id="main-content"></main>
+    </div>
+
+    <!-- نافذة الترقية -->
+    <div id="upgrade-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:9999; align-items:center; justify-content:center;">
+        <div style="background:rgba(20,20,50,0.95); border-radius:20px; padding:30px; width:90%; max-width:400px; border:1px solid rgba(108,99,255,0.3);">
+            <h3 style="color:#f59e0b;"><i class="fas fa-crown"></i> طلب ترقية</h3>
+            <p style="color:#94a3b8; font-size:0.9rem; margin-bottom:1.5rem;">املأ البيانات وسيتم مراجعة طلبك من قبل الإدارة</p>
+            <input id="upgrade-name" class="input-field" placeholder="الاسم الكامل">
+            <input id="upgrade-phone" class="input-field" placeholder="رقم الهاتف">
+            <select id="upgrade-duration" class="input-field">
+                <option value="3 اشهر">3 أشهر</option>
+                <option value="سنة دراسية">سنة دراسية كاملة</option>
+            </select>
+            <button class="btn" style="width:100%; margin-top:10px;" onclick="submitUpgradeRequest()">إرسال الطلب</button>
+            <button class="btn btn-outline" style="width:100%; margin-top:8px;" onclick="document.getElementById('upgrade-modal').style.display='none'">إلغاء</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
