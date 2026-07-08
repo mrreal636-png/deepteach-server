@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- واجهة تسجيل الدخول -->
+    <!-- ===== واجهة تسجيل الدخول ===== -->
     <div id="login-overlay" class="login-overlay">
         <div class="login-container">
             <div class="login-tabs">
@@ -40,12 +40,12 @@
                 <button class="btn full-width" id="register-btn">تسجيل</button>
                 <p id="reg-msg" class="msg"></p>
             </div>
-            <p class="note">حساب الأدمن: <strong>admin / admin</strong></p>
         </div>
     </div>
 
-    <!-- الموقع الرئيسي -->
+    <!-- ===== الموقع الرئيسي ===== -->
     <div id="app-main" class="app-main hidden">
+        <!-- الشريط العلوي -->
         <header class="topbar">
             <div class="logo">
                 <i class="fas fa-graduation-cap"></i> DeepTeach
@@ -64,10 +64,12 @@
             </div>
         </header>
 
+        <!-- زر الهامبرغر للموبايل -->
         <div class="hamburger" id="hamburger">
             <i class="fas fa-bars"></i>
         </div>
 
+        <!-- الشريط الجانبي -->
         <nav class="sidebar" id="sidebar">
             <div class="nav-section">
                 <div class="nav-title">القائمة الرئيسية</div>
@@ -83,9 +85,6 @@
                 <div class="nav-item" data-nav="about">
                     <i class="fas fa-info-circle icon"></i> عن المنصة
                 </div>
-                <div class="nav-item" data-nav="projects">
-                    <i class="fas fa-project-diagram icon"></i> مشاريعنا
-                </div>
                 <div class="nav-item" data-nav="contact">
                     <i class="fas fa-envelope icon"></i> اتصل بنا
                 </div>
@@ -100,10 +99,11 @@
             </div>
         </nav>
 
+        <!-- المحتوى الرئيسي -->
         <main class="main-content" id="main-content"></main>
     </div>
 
-    <!-- نافذة الترقية -->
+    <!-- ===== نافذة الترقية ===== -->
     <div id="upgrade-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:9999; align-items:center; justify-content:center;">
         <div style="background:rgba(20,20,50,0.95); border-radius:20px; padding:30px; width:90%; max-width:400px; border:1px solid rgba(108,99,255,0.3);">
             <h3 style="color:#f59e0b;"><i class="fas fa-crown"></i> طلب ترقية</h3>

@@ -104,7 +104,6 @@ function navigate(page, data = null) {
         case 'lesson': startLessonView(data.grade, data.subject, data.lessonIdx); break;
         case 'progress': renderProgress(); setActiveNav('progress'); break;
         case 'about': renderAbout(); setActiveNav('about'); break;
-        case 'projects': renderProjects(); setActiveNav('projects'); break;
         case 'contact': renderContact(); setActiveNav('contact'); break;
         case 'admin': renderAdmin(); setActiveNav('admin'); break;
         default: renderHome();
@@ -128,7 +127,7 @@ function updateUIForRole(user) {
     }
 }
 
-// ========== الصفحات الجديدة ==========
+// ========== الصفحات ==========
 function renderAbout() {
     mainContent.innerHTML = `
         <h2><i class="fas fa-info-circle"></i> عن منصة DeepTeach</h2>
@@ -143,34 +142,6 @@ function renderAbout() {
                 <i class="fas fa-check-circle" style="color:#f59e0b;"></i> خطط مجانية ومدفوعة حسب احتياجك<br>
                 <i class="fas fa-check-circle" style="color:#f59e0b;"></i> لوحة إدارة متكاملة للمعلمين
             </p>
-        </div>
-    `;
-}
-
-function renderProjects() {
-    mainContent.innerHTML = `
-        <h2><i class="fas fa-project-diagram"></i> مشاريعنا</h2>
-        <div class="grades-grid">
-            <div class="card" style="cursor:default;">
-                <i class="fas fa-cloud-sun icon" style="font-size:3rem;"></i>
-                <h3>تطبيق الطقس</h3>
-                <p>يعرض حالة الطقس لأي مدينة باستخدام API.</p>
-            </div>
-            <div class="card" style="cursor:default;">
-                <i class="fas fa-store icon" style="font-size:3rem;"></i>
-                <h3>متجر إلكتروني</h3>
-                <p>واجهة متجر بسيطة مع سلة مشتريات.</p>
-            </div>
-            <div class="card" style="cursor:default;">
-                <i class="fas fa-blog icon" style="font-size:3rem;"></i>
-                <h3>مدونة شخصية</h3>
-                <p>نظام تدوين مبني بـ React.</p>
-            </div>
-            <div class="card" style="cursor:default;">
-                <i class="fas fa-robot icon" style="font-size:3rem;"></i>
-                <h3>مساعد ذكي</h3>
-                <p>روبوت محادثة تعليمي باستخدام الذكاء الاصطناعي.</p>
-            </div>
         </div>
     `;
 }
@@ -200,7 +171,6 @@ function renderContact() {
     }
 }
 
-// ========== الصفحات الأساسية ==========
 function renderHome() {
     const xp = userXP || 0;
     const badges = userBadges || [];
@@ -486,7 +456,6 @@ function toggleNotifications() {
 }
 
 // ========== دوال إدارة المستخدمين ==========
-
 async function toggleBanUser(username) {
     if (username === 'admin') {
         alert('لا يمكن حظر الأدمن');
@@ -533,7 +502,6 @@ async function deleteUser(username) {
     }
 }
 
-// ========== عرض جميع المستخدمين ==========
 function renderAllUsers(users) {
     let html = `<h3>👥 جميع المستخدمين (${users.length})</h3>`;
     html += `<div style="margin-bottom:10px; display:flex; gap:10px; flex-wrap:wrap;">
@@ -680,7 +648,7 @@ async function renderAdmin(filter = null) {
     subjSel.appendChild(addOption);
 }
 
-// ========== دالة إضافة مادة مباشرة ==========
+// ========== إضافة مادة مباشرة ==========
 function addNewSubjectDirect() {
     const grade = parseInt(document.getElementById('admin-grade').value);
     if (!grade) {
@@ -935,7 +903,6 @@ document.querySelectorAll('.nav-item').forEach(item => {
         else if (nav === 'grades') navigate('grades');
         else if (nav === 'progress') navigate('progress');
         else if (nav === 'about') navigate('about');
-        else if (nav === 'projects') navigate('projects');
         else if (nav === 'contact') navigate('contact');
     });
 });
@@ -981,8 +948,19 @@ document.addEventListener('DOMContentLoaded', () => {
         if (data.error) {
             msg.textContent = data.error;
         } else {
-            msg.textContent = plan === 'free' ? 'تم التسجيل! يمكنك تسجيل الدخول الآن.' : 'تم التسجيل. انتظر موافقة المسؤول.';
-            if (plan === 'free') setTimeout(() => document.querySelector('.tab-btn[data-tab="login"]').click(), 1500);
+            // تسجيل الدخول التلقائي
+            const loginData = await apiPost('/api/login', { username, password });
+            if (loginData.error) {
+                msg.textContent = 'تم التسجيل! يمكنك تسجيل الدخول الآن.';
+            } else {
+                currentUser = loginData.user;
+                document.getElementById('login-overlay').style.display = 'none';
+                document.getElementById('app-main').classList.remove('hidden');
+                updateUIForRole(currentUser);
+                await loadUserData();
+                navigate('home');
+                msg.textContent = '✅ تم التسجيل وتسجيل الدخول تلقائياً';
+            }
         }
     });
 
@@ -997,7 +975,6 @@ function toggleContactField() {
     document.getElementById('contact-field').style.display = plan === 'paid' ? 'block' : 'none';
 }
 
-// ========== جعل الدوال العالمية متاحة من onclick ==========
 window.toggleBanUser = toggleBanUser;
 window.setUserPlan = setUserPlan;
 window.deleteUser = deleteUser;
