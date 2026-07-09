@@ -1,8 +1,8 @@
 // ============================================================
-// DeepTeach - script.js (النسخة النهائية مع لوحة الإدارة)
+// DeepTeach - script.js (النسخة الكاملة)
 // ============================================================
 
-// ========== متغيرات عامة ==========
+// ========== المتغيرات العامة ==========
 let currentUser = null;
 let allGrades = [];
 let currentGradeId = null;
@@ -10,7 +10,17 @@ let currentSubjectId = null;
 let currentUnitId = null;
 let currentLessonId = null;
 let allUsers = [];
-let adminActiveTab = 'users'; // 'users' | 'content'
+let adminActiveTab = 'users';
+let currentExam = {
+    questions: [],
+    currentIndex: 0,
+    answers: [],
+    examType: '',
+    gradeId: null,
+    subjectId: null,
+    unitId: null,
+    lessonId: null
+};
 
 // ========== عناصر DOM ==========
 const mainContent = document.getElementById('mainContent');
@@ -18,7 +28,6 @@ const searchInput = document.getElementById('searchInput');
 const searchResults = document.getElementById('searchResults');
 const loginModal = document.getElementById('loginModal');
 const registerModal = document.getElementById('registerModal');
-const upgradeModal = document.getElementById('upgradeModal');
 const userInfoTop = document.getElementById('userInfoTop');
 const userDisplayTop = document.getElementById('userDisplayTop');
 const loginBtnTop = document.getElementById('loginBtnTop');
@@ -68,7 +77,7 @@ function updateUIForUser() {
 }
 
 // ============================================================
-// ========== عرض الصفحات العامة ==========
+// ========== الصفحة العامة (قبل تسجيل الدخول) ==========
 // ============================================================
 
 function renderPublicHome() {
@@ -77,7 +86,7 @@ function renderPublicHome() {
             <div class="hero-content">
                 <h1>مرحباً بك في <span style="color: var(--gold);">DeepTeach</span></h1>
                 <p>منصة التعلم العميق التي تتيح لك اكتساب المعرفة بطريقة منظمة وتفاعلية</p>
-                <div style="display:flex; gap:15px; justify-content:center; margin-top:20px;">
+                <div style="display:flex; gap:15px; justify-content:center; margin-top:20px; flex-wrap:wrap;">
                     <button class="btn" onclick="showLoginModal()">ابدأ الآن</button>
                     <button class="btn btn-outline" onclick="showRegisterModal()">سجل مجاناً</button>
                 </div>
@@ -144,7 +153,7 @@ function viewGradePublic(gradeId) {
 }
 
 // ============================================================
-// ========== عرض المحتوى للمستخدمين المسجلين ==========
+// ========== الصفحة الرئيسية للمستخدم ==========
 // ============================================================
 
 function renderHome() {
@@ -169,7 +178,6 @@ function renderHome() {
             <div id="gradesGrid" class="grades-grid"></div>
         </section>
     `;
-
     loadUserGrades();
 }
 
@@ -203,7 +211,6 @@ async function loadUserGrades() {
 }
 
 function renderGrades() {
-    // نفس loadUserGrades ولكن مع عرض مباشر
     mainContent.innerHTML = `
         <div style="display:flex; align-items:center; gap:15px; margin-bottom:20px;">
             <button class="btn btn-outline btn-sm" onclick="renderHome()"><i class="fas fa-arrow-right"></i> العودة</button>
@@ -214,6 +221,10 @@ function renderGrades() {
     loadUserGrades();
 }
 
+// ============================================================
+// ========== عرض محتوى الصف ==========
+// ============================================================
+
 async function viewGradeContent(gradeId) {
     try {
         const res = await fetch(`/api/grades/${gradeId}/content`);
@@ -222,7 +233,6 @@ async function viewGradeContent(gradeId) {
             alert(data.error);
             return;
         }
-
         currentGradeId = gradeId;
         renderGradeContent(data);
     } catch (error) {
@@ -247,6 +257,10 @@ function renderGradeContent(grade) {
         </div>
     `;
 }
+
+// ============================================================
+// ========== عرض المادة ==========
+// ============================================================
 
 async function viewSubject(gradeId, subjectId) {
     try {
@@ -287,6 +301,10 @@ function renderSubjectContent(gradeId, subject) {
     `;
 }
 
+// ============================================================
+// ========== عرض الوحدة ==========
+// ============================================================
+
 async function viewUnit(gradeId, subjectId, unitId) {
     try {
         const res = await fetch(`/api/grades/${gradeId}/content`);
@@ -316,9 +334,9 @@ function renderUnitContent(gradeId, subjectId, unit) {
         <div id="lessonsContainer">
             ${unit.lessons && unit.lessons.length > 0 ? unit.lessons.map(l => `
                 <div class="lesson-card" onclick="viewLesson(${gradeId}, ${subjectId}, ${unit.id}, ${l.id})">
-                    <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; width:100%; flex-wrap:wrap;">
                         <h4>${l.title}</h4>
-                        <div>
+                        <div style="display:flex; gap:8px; flex-wrap:wrap;">
                             ${l.locked ? '<span style="color:var(--danger);">🔒 مقفل</span>' : '<span style="color:var(--success);">✅ متاح</span>'}
                             ${l.free ? '<span style="color:var(--text-muted); font-size:0.8rem;">🆓 مجاني</span>' : '<span style="color:var(--gold); font-size:0.8rem;">⭐ مدفوع</span>'}
                         </div>
@@ -337,6 +355,10 @@ function renderUnitContent(gradeId, subjectId, unit) {
         ` : ''}
     `;
 }
+
+// ============================================================
+// ========== عرض الدرس ==========
+// ============================================================
 
 async function viewLesson(gradeId, subjectId, unitId, lessonId) {
     try {
@@ -405,8 +427,6 @@ function renderLessonContent(gradeId, subjectId, unitId, lesson) {
 // ========== الامتحانات ==========
 // ============================================================
 
-let currentExam = { questions: [], currentIndex: 0, answers: [], examType: '', gradeId: null, subjectId: null, unitId: null, lessonId: null };
-
 function startLessonExam(gradeId, subjectId, unitId, lessonId) {
     fetch(`/api/grades/${gradeId}/content`)
         .then(res => res.json())
@@ -416,7 +436,7 @@ function startLessonExam(gradeId, subjectId, unitId, lessonId) {
             const unit = subject.units.find(u => u.id === unitId);
             if (!unit) return;
             const lesson = unit.lessons.find(l => l.id === lessonId);
-            if (!lesson || !lesson.content || !lesson.content.exam) {
+            if (!lesson || !lesson.content || !lesson.content.exam || !lesson.content.exam.questions || lesson.content.exam.questions.length === 0) {
                 alert('لا يوجد امتحان لهذا الدرس');
                 return;
             }
@@ -425,7 +445,10 @@ function startLessonExam(gradeId, subjectId, unitId, lessonId) {
                 currentIndex: 0,
                 answers: [],
                 examType: 'lesson',
-                gradeId, subjectId, unitId, lessonId
+                gradeId,
+                subjectId,
+                unitId,
+                lessonId
             };
             renderExam();
         })
@@ -442,7 +465,7 @@ function startUnitExam(gradeId, subjectId, unitId) {
             const subject = data.subjects.find(s => s.id === subjectId);
             if (!subject) return;
             const unit = subject.units.find(u => u.id === unitId);
-            if (!unit || !unit.exam) {
+            if (!unit || !unit.exam || !unit.exam.questions || unit.exam.questions.length === 0) {
                 alert('لا يوجد امتحان لهذه الوحدة');
                 return;
             }
@@ -451,7 +474,9 @@ function startUnitExam(gradeId, subjectId, unitId) {
                 currentIndex: 0,
                 answers: [],
                 examType: 'unit',
-                gradeId, subjectId, unitId
+                gradeId,
+                subjectId,
+                unitId
             };
             renderExam();
         })
@@ -469,10 +494,13 @@ function renderExam() {
     const q = currentExam.questions[currentExam.currentIndex];
     mainContent.innerHTML = `
         <div style="max-width:700px; margin:0 auto;">
-            <h2>📝 الامتحان</h2>
-            <div style="background:var(--glass-bg); border-radius:var(--radius); padding:20px; border:1px solid var(--glass-border);">
+            <div style="display:flex; align-items:center; gap:15px; margin-bottom:20px;">
+                <button class="btn btn-outline btn-sm" onclick="viewUnit(${currentExam.gradeId}, ${currentExam.subjectId}, ${currentExam.unitId})"><i class="fas fa-arrow-right"></i> العودة</button>
+                <h2 style="margin:0;">📝 الامتحان</h2>
+            </div>
+            <div style="background:var(--glass-bg); border-radius:var(--radius); padding:25px; border:1px solid var(--glass-border);">
                 <p style="color:var(--text-secondary);">السؤال ${currentExam.currentIndex + 1} من ${currentExam.questions.length}</p>
-                <h3>${q.question}</h3>
+                <h3 style="margin-top:10px;">${q.question}</h3>
                 <div style="margin-top:15px;">
                     ${q.options.map((opt, idx) => `
                         <label class="option-item" onclick="selectExamAnswer(${idx})" id="examOpt${idx}">
@@ -481,7 +509,7 @@ function renderExam() {
                         </label>
                     `).join('')}
                 </div>
-                <button class="btn" id="examNextBtn" onclick="nextExamQuestion()" disabled>التالي</button>
+                <button class="btn" id="examNextBtn" onclick="nextExamQuestion()" disabled style="margin-top:15px;">التالي</button>
             </div>
         </div>
     `;
@@ -518,6 +546,34 @@ function finishExam() {
             <div style="font-size:4rem; margin:20px 0; color:${passed ? 'var(--success)' : 'var(--danger)'};">${score}%</div>
             <p style="font-size:1.2rem;">${passed ? '🎉 أحسنت! اجتزت الامتحان' : '😔 لم تجتز الامتحان، حاول مرة أخرى'}</p>
             <button class="btn" onclick="viewUnit(${currentExam.gradeId}, ${currentExam.subjectId}, ${currentExam.unitId})">العودة</button>
+        </div>
+    `;
+}
+
+// ============================================================
+// ========== حساب المستخدم ==========
+// ============================================================
+
+function renderProfile() {
+    if (!currentUser) {
+        showLoginModal();
+        return;
+    }
+    mainContent.innerHTML = `
+        <div style="max-width:500px; margin:0 auto; background:var(--glass-bg); border-radius:var(--radius); padding:30px; border:1px solid var(--glass-border);">
+            <div style="display:flex; align-items:center; gap:15px; margin-bottom:20px;">
+                <button class="btn btn-outline btn-sm" onclick="renderHome()"><i class="fas fa-arrow-right"></i> العودة</button>
+                <h2 style="margin:0;">حسابي</h2>
+            </div>
+            <div style="margin-top:20px;">
+                <p><strong>اسم المستخدم:</strong> ${currentUser.username}</p>
+                <p><strong>البريد الإلكتروني:</strong> ${currentUser.email}</p>
+                <p><strong>رقم الهاتف:</strong> ${currentUser.phone || 'غير مضاف'}</p>
+                <p><strong>الخطة:</strong> ${currentUser.plan === 'paid' ? 'مدفوعة ⭐' : 'مجانية 🆓'}</p>
+                ${currentUser.plan === 'paid' && currentUser.subscriptionEnd ? `<p><strong>ينتهي الاشتراك:</strong> ${new Date(currentUser.subscriptionEnd).toLocaleDateString('ar-EG')}</p>` : ''}
+                <p><strong>الدور:</strong> ${currentUser.role === 'admin' ? 'مشرف 👑' : 'طالب 🎓'}</p>
+                ${currentUser.selectedGrades && currentUser.selectedGrades.length > 0 ? `<p><strong>الصفوف المشترك بها:</strong> ${currentUser.selectedGrades.join(', ')}</p>` : ''}
+            </div>
         </div>
     `;
 }
@@ -562,7 +618,7 @@ async function renderAdminUsers() {
         allUsers = users;
         let html = `
             <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:15px;">
-                <input type="text" id="userSearchInput" placeholder="🔍 بحث عن مستخدم..." class="input-field" style="flex:1; min-width:200px;" oninput="filterUsers()">
+                <input type="text" id="userSearchInput" placeholder="🔍 بحث عن مستخدم..." class="input-group" style="flex:1; min-width:200px; padding:8px 14px; background:rgba(255,255,255,0.05); border:1px solid var(--glass-border); border-radius:var(--radius-sm); color:white;" oninput="filterUsers()">
                 <button class="btn btn-sm" onclick="refreshUsers()">🔄 تحديث</button>
             </div>
             <div style="overflow-x:auto;">
@@ -609,7 +665,7 @@ async function renderAdminUsers() {
 }
 
 function filterUsers() {
-    const q = document.getElementById('userSearchInput').value.toLowerCase();
+    const q = document.getElementById('userSearchInput')?.value?.toLowerCase() || '';
     const rows = document.querySelectorAll('#usersTableBody tr');
     rows.forEach(row => {
         const text = row.textContent.toLowerCase();
@@ -624,7 +680,6 @@ async function refreshUsers() {
 async function editUser(userId) {
     const user = allUsers.find(u => u._id === userId);
     if (!user) return;
-    // عرض نموذج تعديل بسيط
     const newUsername = prompt('اسم المستخدم:', user.username);
     if (newUsername === null) return;
     const newEmail = prompt('البريد الإلكتروني:', user.email);
@@ -634,11 +689,7 @@ async function editUser(userId) {
     const newPassword = prompt('كلمة المرور الجديدة (اترك فارغاً للإبقاء على القديمة):', '');
     if (newPassword === null) return;
 
-    const data = {
-        username: newUsername,
-        email: newEmail,
-        phone: newPhone
-    };
+    const data = { username: newUsername, email: newEmail, phone: newPhone };
     if (newPassword.trim()) data.password = newPassword.trim();
 
     try {
@@ -662,9 +713,7 @@ async function editUser(userId) {
 async function toggleBanUser(userId) {
     if (!confirm('هل تريد تبديل حالة الحظر لهذا المستخدم؟')) return;
     try {
-        const res = await fetch(`/api/admin/users/${userId}/ban`, {
-            method: 'PUT'
-        });
+        const res = await fetch(`/api/admin/users/${userId}/ban`, { method: 'PUT' });
         const data = await res.json();
         if (data.success) {
             alert(data.banned ? '✅ تم حظر المستخدم' : '✅ تم إلغاء الحظر');
@@ -678,9 +727,7 @@ async function toggleBanUser(userId) {
 async function deleteUser(userId) {
     if (!confirm('⚠️ هل أنت متأكد من حذف هذا المستخدم نهائياً؟')) return;
     try {
-        const res = await fetch(`/api/admin/users/${userId}`, {
-            method: 'DELETE'
-        });
+        const res = await fetch(`/api/admin/users/${userId}`, { method: 'DELETE' });
         const data = await res.json();
         if (data.success) {
             alert('✅ تم حذف المستخدم');
@@ -701,8 +748,7 @@ function showUpgradeUser(userId) {
         alert('يرجى اختيار مدة صحيحة (1، 3، 9، 12)');
         return;
     }
-    // اختيار الصفوف
-    const gradesInput = prompt('أدخل أرقام الصفوف التي يريد الاشتراك بها (مفصولة بفواصل):\nمثال: 1,2,3');
+    const gradesInput = prompt('أدخل أرقام الصفوف التي يريد الاشتراك بها (مفصولة بفواصل):\nمثال: 1,2,3', '');
     if (gradesInput === null) return;
     const selectedGrades = gradesInput.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n));
     if (selectedGrades.length === 0) {
@@ -721,16 +767,16 @@ function showUpgradeUser(userId) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
     })
-    .then(res => res.json())
-    .then(result => {
-        if (result.success) {
-            alert('✅ تم ترقية المستخدم بنجاح');
-            renderAdminUsers();
-        } else {
-            alert('❌ ' + (result.error || 'فشل الترقية'));
-        }
-    })
-    .catch(() => alert('خطأ في الاتصال'));
+        .then(res => res.json())
+        .then(result => {
+            if (result.success) {
+                alert('✅ تم ترقية المستخدم بنجاح');
+                renderAdminUsers();
+            } else {
+                alert('❌ ' + (result.error || 'فشل الترقية'));
+            }
+        })
+        .catch(() => alert('خطأ في الاتصال'));
 }
 
 async function setUserPlan(userId, plan) {
@@ -740,7 +786,6 @@ async function setUserPlan(userId, plan) {
         data.selectedGrades = [];
         data.subscriptionDuration = null;
     } else {
-        // إذا كان التغيير إلى مدفوع، نطلب المدة والصفوف
         const duration = prompt('المدة بالأشهر (1,3,9,12):', '12');
         if (!duration) return;
         const months = parseInt(duration);
@@ -868,26 +913,26 @@ function renderAdminGradeDetail(grade) {
     `;
 }
 
-// ----- دوال إضافة الصفوف والمواد والوحدات والدروس -----
+// ====== دوال إدارة الصفوف ======
 
 function showAddGrade() {
     const name = prompt('أدخل اسم الصف الجديد (مثال: الصف الثالث)');
     if (!name) return;
     fetch('/api/admin/grades', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name })
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            alert('✅ تم إضافة الصف');
-            refreshContent();
-        } else {
-            alert('❌ ' + (data.error || 'فشل الإضافة'));
-        }
-    })
-    .catch(() => alert('خطأ في الاتصال'));
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                alert('✅ تم إضافة الصف');
+                refreshContent();
+            } else {
+                alert('❌ ' + (data.error || 'فشل الإضافة'));
+            }
+        })
+        .catch(() => alert('خطأ في الاتصال'));
 }
 
 function editGrade(gradeId) {
@@ -896,55 +941,57 @@ function editGrade(gradeId) {
     const newName = prompt('اسم الصف الجديد:', grade.name);
     if (!newName) return;
     fetch(`/api/admin/grades/${gradeId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: newName })
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            alert('✅ تم التعديل');
-            refreshContent();
-        } else {
-            alert('❌ ' + (data.error || 'فشل التعديل'));
-        }
-    })
-    .catch(() => alert('خطأ في الاتصال'));
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: newName })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                alert('✅ تم التعديل');
+                refreshContent();
+            } else {
+                alert('❌ ' + (data.error || 'فشل التعديل'));
+            }
+        })
+        .catch(() => alert('خطأ في الاتصال'));
 }
 
 function deleteGrade(gradeId) {
     if (!confirm('هل أنت متأكد من حذف هذا الصف وجميع محتوياته؟')) return;
     fetch(`/api/admin/grades/${gradeId}`, { method: 'DELETE' })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            alert('✅ تم الحذف');
-            refreshContent();
-        } else {
-            alert('❌ ' + (data.error || 'فشل الحذف'));
-        }
-    })
-    .catch(() => alert('خطأ في الاتصال'));
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                alert('✅ تم الحذف');
+                refreshContent();
+            } else {
+                alert('❌ ' + (data.error || 'فشل الحذف'));
+            }
+        })
+        .catch(() => alert('خطأ في الاتصال'));
 }
+
+// ====== دوال إدارة المواد ======
 
 function showAddSubject(gradeId) {
     const name = prompt('أدخل اسم المادة الجديدة:');
     if (!name) return;
     fetch(`/api/admin/grades/${gradeId}/subjects`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name })
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            alert('✅ تم إضافة المادة');
-            refreshContent();
-        } else {
-            alert('❌ ' + (data.error || 'فشل الإضافة'));
-        }
-    })
-    .catch(() => alert('خطأ في الاتصال'));
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                alert('✅ تم إضافة المادة');
+                refreshContent();
+            } else {
+                alert('❌ ' + (data.error || 'فشل الإضافة'));
+            }
+        })
+        .catch(() => alert('خطأ في الاتصال'));
 }
 
 function editSubject(gradeId, subjectId) {
@@ -955,55 +1002,57 @@ function editSubject(gradeId, subjectId) {
     const newName = prompt('اسم المادة الجديد:', subject.name);
     if (!newName) return;
     fetch(`/api/admin/grades/${gradeId}/subjects/${subjectId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: newName })
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            alert('✅ تم التعديل');
-            refreshContent();
-        } else {
-            alert('❌ ' + (data.error || 'فشل التعديل'));
-        }
-    })
-    .catch(() => alert('خطأ في الاتصال'));
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: newName })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                alert('✅ تم التعديل');
+                refreshContent();
+            } else {
+                alert('❌ ' + (data.error || 'فشل التعديل'));
+            }
+        })
+        .catch(() => alert('خطأ في الاتصال'));
 }
 
 function deleteSubject(gradeId, subjectId) {
     if (!confirm('حذف هذه المادة وجميع محتوياتها؟')) return;
     fetch(`/api/admin/grades/${gradeId}/subjects/${subjectId}`, { method: 'DELETE' })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            alert('✅ تم الحذف');
-            refreshContent();
-        } else {
-            alert('❌ ' + (data.error || 'فشل الحذف'));
-        }
-    })
-    .catch(() => alert('خطأ في الاتصال'));
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                alert('✅ تم الحذف');
+                refreshContent();
+            } else {
+                alert('❌ ' + (data.error || 'فشل الحذف'));
+            }
+        })
+        .catch(() => alert('خطأ في الاتصال'));
 }
+
+// ====== دوال إدارة الوحدات ======
 
 function showAddUnit(gradeId, subjectId) {
     const name = prompt('أدخل اسم الوحدة الجديدة:');
     if (!name) return;
     fetch(`/api/admin/grades/${gradeId}/subjects/${subjectId}/units`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name })
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            alert('✅ تم إضافة الوحدة');
-            refreshContent();
-        } else {
-            alert('❌ ' + (data.error || 'فشل الإضافة'));
-        }
-    })
-    .catch(() => alert('خطأ في الاتصال'));
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                alert('✅ تم إضافة الوحدة');
+                refreshContent();
+            } else {
+                alert('❌ ' + (data.error || 'فشل الإضافة'));
+            }
+        })
+        .catch(() => alert('خطأ في الاتصال'));
 }
 
 function editUnit(gradeId, subjectId, unitId) {
@@ -1016,36 +1065,38 @@ function editUnit(gradeId, subjectId, unitId) {
     const newName = prompt('اسم الوحدة الجديد:', unit.name);
     if (!newName) return;
     fetch(`/api/admin/grades/${gradeId}/subjects/${subjectId}/units/${unitId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: newName })
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            alert('✅ تم التعديل');
-            refreshContent();
-        } else {
-            alert('❌ ' + (data.error || 'فشل التعديل'));
-        }
-    })
-    .catch(() => alert('خطأ في الاتصال'));
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: newName })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                alert('✅ تم التعديل');
+                refreshContent();
+            } else {
+                alert('❌ ' + (data.error || 'فشل التعديل'));
+            }
+        })
+        .catch(() => alert('خطأ في الاتصال'));
 }
 
 function deleteUnit(gradeId, subjectId, unitId) {
     if (!confirm('حذف هذه الوحدة وجميع دروسها؟')) return;
     fetch(`/api/admin/grades/${gradeId}/subjects/${subjectId}/units/${unitId}`, { method: 'DELETE' })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            alert('✅ تم الحذف');
-            refreshContent();
-        } else {
-            alert('❌ ' + (data.error || 'فشل الحذف'));
-        }
-    })
-    .catch(() => alert('خطأ في الاتصال'));
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                alert('✅ تم الحذف');
+                refreshContent();
+            } else {
+                alert('❌ ' + (data.error || 'فشل الحذف'));
+            }
+        })
+        .catch(() => alert('خطأ في الاتصال'));
 }
+
+// ====== دوال إدارة الدروس ======
 
 function showAddLesson(gradeId, subjectId, unitId) {
     const title = prompt('عنوان الدرس:');
@@ -1058,35 +1109,32 @@ function showAddLesson(gradeId, subjectId, unitId) {
     const qCount = parseInt(questionsCount) || 0;
     let exam = { questions: [] };
     for (let i = 0; i < qCount; i++) {
-        const q = prompt(`السؤال ${i+1}:`);
+        const q = prompt(`السؤال ${i + 1}:`);
         if (!q) break;
-        const options = prompt(`خيارات السؤال ${i+1} (مفصولة بفواصل):`, '');
+        const options = prompt(`خيارات السؤال ${i + 1} (مفصولة بفواصل):`, '');
         if (!options) break;
-        const correct = parseInt(prompt(`رقم الإجابة الصحيحة (0-${options.split(',').length-1}):`, '0'));
-        if (isNaN(correct)) break;
-        exam.questions.push({
-            question: q,
-            options: options.split(',').map(s => s.trim()),
-            correctAnswer: correct
-        });
+        const opts = options.split(',').map(s => s.trim());
+        const correct = parseInt(prompt(`رقم الإجابة الصحيحة (0-${opts.length - 1}):`, '0'));
+        if (isNaN(correct) || correct < 0 || correct >= opts.length) break;
+        exam.questions.push({ question: q, options: opts, correctAnswer: correct });
     }
 
     const data = { title, video, content, examples, free, exam };
     fetch(`/api/admin/grades/${gradeId}/subjects/${subjectId}/units/${unitId}/lessons`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-    })
-    .then(res => res.json())
-    .then(result => {
-        if (result.success) {
-            alert('✅ تم إضافة الدرس');
-            refreshContent();
-        } else {
-            alert('❌ ' + (result.error || 'فشل الإضافة'));
-        }
-    })
-    .catch(() => alert('خطأ في الاتصال'));
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        })
+        .then(res => res.json())
+        .then(result => {
+            if (result.success) {
+                alert('✅ تم إضافة الدرس');
+                refreshContent();
+            } else {
+                alert('❌ ' + (result.error || 'فشل الإضافة'));
+            }
+        })
+        .catch(() => alert('خطأ في الاتصال'));
 }
 
 function editLessonContent(gradeId, subjectId, unitId, lessonId) {
@@ -1106,44 +1154,38 @@ function editLessonContent(gradeId, subjectId, unitId, lessonId) {
     const newExamples = prompt('الأمثلة:', lesson.examples || '');
     const newFree = confirm(`الدرس الحالي ${lesson.free ? 'مجاني' : 'مدفوع'}. هل تريد جعله مجاني؟ (موافق = مجاني، إلغاء = مدفوع)`);
 
-    const data = {
-        title: newTitle,
-        video: newVideo,
-        content: newContent,
-        examples: newExamples,
-        free: newFree
-    };
+    const data = { title: newTitle, video: newVideo, content: newContent, examples: newExamples, free: newFree };
 
     fetch(`/api/admin/grades/${gradeId}/subjects/${subjectId}/units/${unitId}/lessons/${lessonId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-    })
-    .then(res => res.json())
-    .then(result => {
-        if (result.success) {
-            alert('✅ تم التعديل');
-            refreshContent();
-        } else {
-            alert('❌ ' + (result.error || 'فشل التعديل'));
-        }
-    })
-    .catch(() => alert('خطأ في الاتصال'));
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        })
+        .then(res => res.json())
+        .then(result => {
+            if (result.success) {
+                alert('✅ تم التعديل');
+                refreshContent();
+            } else {
+                alert('❌ ' + (result.error || 'فشل التعديل'));
+            }
+        })
+        .catch(() => alert('خطأ في الاتصال'));
 }
 
 function deleteLesson(gradeId, subjectId, unitId, lessonId) {
     if (!confirm('حذف هذا الدرس؟')) return;
     fetch(`/api/admin/grades/${gradeId}/subjects/${subjectId}/units/${unitId}/lessons/${lessonId}`, { method: 'DELETE' })
-    .then(res => res.json())
-    .then(result => {
-        if (result.success) {
-            alert('✅ تم الحذف');
-            refreshContent();
-        } else {
-            alert('❌ ' + (result.error || 'فشل الحذف'));
-        }
-    })
-    .catch(() => alert('خطأ في الاتصال'));
+        .then(res => res.json())
+        .then(result => {
+            if (result.success) {
+                alert('✅ تم الحذف');
+                refreshContent();
+            } else {
+                alert('❌ ' + (result.error || 'فشل الحذف'));
+            }
+        })
+        .catch(() => alert('خطأ في الاتصال'));
 }
 
 function editUnitExam(gradeId, subjectId, unitId) {
@@ -1163,37 +1205,37 @@ function editUnitExam(gradeId, subjectId, unitId) {
     }
     let exam = { questions: [] };
     for (let i = 0; i < count; i++) {
-        const q = prompt(`سؤال ${i+1}:`);
+        const q = prompt(`سؤال ${i + 1}:`);
         if (!q) break;
         const options = prompt(`خيارات (مفصولة بفواصل):`, '');
         if (!options) break;
-        const correct = parseInt(prompt(`رقم الإجابة الصحيحة (0-${options.split(',').length-1}):`, '0'));
-        if (isNaN(correct)) break;
-        exam.questions.push({ question: q, options: options.split(',').map(s => s.trim()), correctAnswer: correct });
+        const opts = options.split(',').map(s => s.trim());
+        const correct = parseInt(prompt(`رقم الإجابة الصحيحة (0-${opts.length - 1}):`, '0'));
+        if (isNaN(correct) || correct < 0 || correct >= opts.length) break;
+        exam.questions.push({ question: q, options: opts, correctAnswer: correct });
     }
 
     fetch(`/api/admin/grades/${gradeId}/subjects/${subjectId}/units/${unitId}/exam`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ exam })
-    })
-    .then(res => res.json())
-    .then(result => {
-        if (result.success) {
-            alert('✅ تم تحديث امتحان الوحدة');
-            refreshContent();
-        } else {
-            alert('❌ ' + (result.error || 'فشل التحديث'));
-        }
-    })
-    .catch(() => alert('خطأ في الاتصال'));
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ exam })
+        })
+        .then(res => res.json())
+        .then(result => {
+            if (result.success) {
+                alert('✅ تم تحديث امتحان الوحدة');
+                refreshContent();
+            } else {
+                alert('❌ ' + (result.error || 'فشل التحديث'));
+            }
+        })
+        .catch(() => alert('خطأ في الاتصال'));
 }
 
 function refreshContent() {
     if (adminActiveTab === 'content') {
         renderAdminContent();
         if (currentGradeId) {
-            // إعادة تحديد الصف المختار
             const grade = allGrades.find(g => g.id === currentGradeId);
             if (grade) {
                 setTimeout(() => selectAdminGrade(currentGradeId), 100);
@@ -1202,32 +1244,6 @@ function refreshContent() {
     } else {
         renderAdminUsers();
     }
-}
-
-// ============================================================
-// ========== حساب المستخدم ==========
-// ============================================================
-
-function renderProfile() {
-    if (!currentUser) {
-        showLoginModal();
-        return;
-    }
-    mainContent.innerHTML = `
-        <div style="max-width:500px; margin:0 auto; background:var(--glass-bg); border-radius:var(--radius); padding:30px; border:1px solid var(--glass-border);">
-            <h2>حسابي</h2>
-            <div style="margin-top:20px;">
-                <p><strong>اسم المستخدم:</strong> ${currentUser.username}</p>
-                <p><strong>البريد الإلكتروني:</strong> ${currentUser.email}</p>
-                <p><strong>رقم الهاتف:</strong> ${currentUser.phone || 'غير مضاف'}</p>
-                <p><strong>الخطة:</strong> ${currentUser.plan === 'paid' ? 'مدفوعة ⭐' : 'مجانية 🆓'}</p>
-                ${currentUser.plan === 'paid' && currentUser.subscriptionEnd ? `<p><strong>ينتهي الاشتراك:</strong> ${new Date(currentUser.subscriptionEnd).toLocaleDateString('ar-EG')}</p>` : ''}
-                <p><strong>الدور:</strong> ${currentUser.role === 'admin' ? 'مشرف 👑' : 'طالب 🎓'}</p>
-                ${currentUser.selectedGrades && currentUser.selectedGrades.length > 0 ? `<p><strong>الصفوف المشترك بها:</strong> ${currentUser.selectedGrades.join(', ')}</p>` : ''}
-            </div>
-            <button class="btn btn-outline" onclick="renderHome()" style="margin-top:20px;">العودة</button>
-        </div>
-    `;
 }
 
 // ============================================================
@@ -1302,7 +1318,7 @@ async function loadGradesForRegister() {
         const container = document.getElementById('gradesCheckboxes');
         if (!container) return;
         container.innerHTML = grades.map(g => `
-            <label style="display:flex; align-items:center; gap:5px; font-size:0.9rem; color:var(--text-secondary);">
+            <label style="display:flex; align-items:center; gap:5px; font-size:0.85rem; color:var(--text-secondary); cursor:pointer;">
                 <input type="checkbox" value="${g.id}" class="grade-checkbox">
                 ${g.name}
             </label>
@@ -1364,7 +1380,13 @@ async function registerUser() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                username, email, password, confirmPassword, phone, plan, selectedGrades
+                username,
+                email,
+                password,
+                confirmPassword,
+                phone,
+                plan,
+                selectedGrades
             })
         });
         const data = await res.json();
@@ -1490,3 +1512,49 @@ document.addEventListener('DOMContentLoaded', async () => {
         renderHome();
     }
 });
+
+// جعل الدوال العالمية متاحة من onclick في HTML
+window.showLoginModal = showLoginModal;
+window.closeModal = closeModal;
+window.loginUser = loginUser;
+window.showRegisterModal = showRegisterModal;
+window.registerUser = registerUser;
+window.logout = logout;
+window.renderHome = renderHome;
+window.renderGrades = renderGrades;
+window.viewGradeContent = viewGradeContent;
+window.viewSubject = viewSubject;
+window.viewUnit = viewUnit;
+window.viewLesson = viewLesson;
+window.viewGradePublic = viewGradePublic;
+window.renderProfile = renderProfile;
+window.renderAdminPanel = renderAdminPanel;
+window.switchAdminTab = switchAdminTab;
+window.filterUsers = filterUsers;
+window.refreshUsers = refreshUsers;
+window.editUser = editUser;
+window.toggleBanUser = toggleBanUser;
+window.deleteUser = deleteUser;
+window.showUpgradeUser = showUpgradeUser;
+window.setUserPlan = setUserPlan;
+window.selectAdminGrade = selectAdminGrade;
+window.showAddGrade = showAddGrade;
+window.editGrade = editGrade;
+window.deleteGrade = deleteGrade;
+window.showAddSubject = showAddSubject;
+window.editSubject = editSubject;
+window.deleteSubject = deleteSubject;
+window.showAddUnit = showAddUnit;
+window.editUnit = editUnit;
+window.deleteUnit = deleteUnit;
+window.showAddLesson = showAddLesson;
+window.editLessonContent = editLessonContent;
+window.deleteLesson = deleteLesson;
+window.editUnitExam = editUnitExam;
+window.refreshContent = refreshContent;
+window.startLessonExam = startLessonExam;
+window.startUnitExam = startUnitExam;
+window.selectExamAnswer = selectExamAnswer;
+window.nextExamQuestion = nextExamQuestion;
+window.toggleGradeSelection = toggleGradeSelection;
+window.navigateSearchResult = navigateSearchResult;
