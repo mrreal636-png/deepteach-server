@@ -1,7 +1,6 @@
 /**
  * ================================================================
- * DeepTeach - الخادم الخلفي (Backend Server)
- * الإصدار 3.0.0 (النهائي المتكامل)
+ * DeepTeach - الخادم الخلفي (الإصدار المحسّن النهائي)
  * ================================================================
  * 
  * 🏗️  الهندسة: RESTful API مع Express.js
@@ -38,9 +37,6 @@ if (!MONGODB_URI) {
 // 2. الاتصال بقاعدة البيانات
 // ================================================================
 
-/**
- * الاتصال بـ MongoDB مع إعدادات مهلة مناسبة
- */
 mongoose
     .connect(MONGODB_URI, {
         serverSelectionTimeoutMS: 10000,
@@ -66,11 +62,6 @@ mongoose
 // 3. إعدادات Middleware
 // ================================================================
 
-/**
- * إعداد الجلسات (Sessions)
- * - تستخدم لتخزين حالة المستخدم بين الطلبات
- * - تنتهي الجلسة بعد 7 أيام
- */
 app.use(
     session({
         secret: SESSION_SECRET,
@@ -87,39 +78,14 @@ app.use(
     })
 );
 
-/**
- * معالجة JSON و URL-encoded data
- * - حد أقصى 10 ميجابايت للطلبات الكبيرة (مثل المحتوى الغني)
- */
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-
-/**
- * تقديم الملفات الثابتة من مجلد public
- */
 app.use(express.static(path.join(__dirname, 'public')));
-
-/**
- * سجل جميع الطلبات (للتتبع)
- */
-app.use((req, res, next) => {
-    const start = Date.now();
-    res.on('finish', () => {
-        const duration = Date.now() - start;
-        console.log(`📡 ${req.method} ${req.path} - ${res.statusCode} (${duration}ms)`);
-    });
-    next();
-});
 
 // ================================================================
 // 4. مخططات قاعدة البيانات (Database Schemas)
 // ================================================================
 
-/**
- * 4.1 مخطط الامتحان
- * - يُستخدم داخل الدروس والوحدات
- * - يحتوي على مصفوفة من الأسئلة مع الخيارات والإجابة الصحيحة
- */
 const ExamSchema = new mongoose.Schema(
     {
         questions: [
@@ -142,12 +108,6 @@ const ExamSchema = new mongoose.Schema(
     { _id: false }
 );
 
-/**
- * 4.2 مخطط الدرس
- * - يمثل وحدة تعليمية واحدة
- * - يحتوي على: عنوان، فيديو، شرح نصي، أمثلة، امتحان
- * - خاصية `free` تحدد إذا كان الدرس متاحاً للمستخدمين المجانيين
- */
 const LessonSchema = new mongoose.Schema({
     id: { type: Number, required: true },
     title: { type: String, required: true, trim: true },
@@ -158,11 +118,6 @@ const LessonSchema = new mongoose.Schema({
     exam: { type: ExamSchema, default: () => ({ questions: [] }) },
 });
 
-/**
- * 4.3 مخطط الوحدة
- * - مجموعة من الدروس مرتبطة بموضوع واحد
- * - تحتوي على امتحان خاص بالوحدة كاملة
- */
 const UnitSchema = new mongoose.Schema({
     id: { type: Number, required: true },
     name: { type: String, required: true, trim: true },
@@ -170,33 +125,18 @@ const UnitSchema = new mongoose.Schema({
     exam: { type: ExamSchema, default: () => ({ questions: [] }) },
 });
 
-/**
- * 4.4 مخطط المادة
- * - مادة دراسية ضمن صف معين
- * - تحتوي على وحدات متعددة
- */
 const SubjectSchema = new mongoose.Schema({
     id: { type: Number, required: true },
     name: { type: String, required: true, trim: true },
     units: { type: [UnitSchema], default: [] },
 });
 
-/**
- * 4.5 مخطط الصف
- * - مستوى دراسي (الصف الأول إلى الثاني عشر)
- * - يحتوي على مواد متعددة
- */
 const GradeSchema = new mongoose.Schema({
     id: { type: Number, required: true, unique: true },
     name: { type: String, required: true, trim: true },
     subjects: { type: [SubjectSchema], default: [] },
 });
 
-/**
- * 4.6 مخطط المستخدم
- * - يمثل جميع المستخدمين: الطلاب والأدمن
- * - يحتوي على: بيانات الحساب، الخطة، الصفوف المشترك بها، الحالة
- */
 const UserSchema = new mongoose.Schema(
     {
         username: {
@@ -259,82 +199,18 @@ const UserSchema = new mongoose.Schema(
     }
 );
 
-// إنشاء النماذج (Models)
 const User = mongoose.model('User', UserSchema);
 const Grade = mongoose.model('Grade', GradeSchema);
 
 // ================================================================
-// 5. دوال مساعدة (Utility Functions)
+// 5. دوال مساعدة
 // ================================================================
 
-/**
- * الحصول على معرف فريد تلقائي
- * @param {Array} items - المصفوفة المراد البحث فيها
- * @returns {number} - المعرف الجديد
- */
 function getNextId(items) {
     if (!items || items.length === 0) return 1;
     return Math.max(...items.map(item => item.id || 0)) + 1;
 }
 
-/**
- * التحقق من صلاحية الوصول إلى درس
- * @param {Object|null} user - المستخدم الحالي
- * @param {Object} lesson - الدرس المطلوب
- * @returns {boolean}
- */
-function canAccessLesson(user, lesson) {
-    if (!user) return false;
-    if (user.role === 'admin') return true;
-    if (lesson.free) return true;
-    if (user.plan === 'paid') {
-        if (user.subscriptionEnd && new Date() > new Date(user.subscriptionEnd)) {
-            return false;
-        }
-        return true;
-    }
-    return false;
-}
-
-/**
- * التحقق من اشتراك المستخدم في صف معين
- * @param {Object|null} user - المستخدم الحالي
- * @param {number} gradeId - معرف الصف
- * @returns {boolean}
- */
-function isUserInGrade(user, gradeId) {
-    if (!user) return false;
-    if (user.role === 'admin') return true;
-    if (user.plan === 'free') return true;
-    if (user.plan === 'paid') {
-        return user.selectedGrades.includes(gradeId);
-    }
-    return false;
-}
-
-/**
- * التحقق من أن المستخدم هو مدير
- * @param {Object} user - المستخدم
- * @returns {boolean}
- */
-function isAdmin(user) {
-    return user && user.role === 'admin';
-}
-
-/**
- * التحقق من أن المستخدم مسجل الدخول
- * @param {Object} req - كائن الطلب
- * @returns {boolean}
- */
-function isAuthenticated(req) {
-    return !!req.session.userId;
-}
-
-/**
- * الحصول على المستخدم الحالي من الجلسة
- * @param {Object} req - كائن الطلب
- * @returns {Promise<Object|null>}
- */
 async function getCurrentUser(req) {
     if (!req.session.userId) return null;
     try {
@@ -345,24 +221,9 @@ async function getCurrentUser(req) {
 }
 
 // ================================================================
-// 6. دوال المصادقة (Auth Middleware)
+// 6. دوال المصادقة (Middleware)
 // ================================================================
 
-/**
- * وسيط التحقق من أن المستخدم مسجل الدخول
- */
-async function requireAuth(req, res, next) {
-    const user = await getCurrentUser(req);
-    if (!user) {
-        return res.status(401).json({ error: 'يجب تسجيل الدخول أولاً' });
-    }
-    req.user = user;
-    next();
-}
-
-/**
- * وسيط التحقق من أن المستخدم هو مدير
- */
 async function requireAdmin(req, res, next) {
     const user = await getCurrentUser(req);
     if (!user) {
@@ -376,20 +237,13 @@ async function requireAdmin(req, res, next) {
 }
 
 // ================================================================
-// 7. مسارات API - المصادقة (Auth Routes)
+// 7. مسارات API - المصادقة
 // ================================================================
 
-/**
- * POST /api/login - تسجيل الدخول
- * @body {string} username - اسم المستخدم أو البريد الإلكتروني
- * @body {string} password - كلمة المرور
- * @returns {Object} - بيانات المستخدم مع جلسة نشطة
- */
 app.post('/api/login', async (req, res) => {
     try {
         const { username, password } = req.body;
 
-        // التحقق من صحة الإدخال
         if (!username || !password) {
             return res.status(400).json({
                 success: false,
@@ -397,10 +251,9 @@ app.post('/api/login', async (req, res) => {
             });
         }
 
-        // البحث عن المستخدم
+        // البحث عن المستخدم بكل من اسم المستخدم والبريد الإلكتروني
         const user = await User.findOne({
             $or: [{ username: username }, { email: username }],
-            password: password,
         });
 
         if (!user) {
@@ -410,7 +263,14 @@ app.post('/api/login', async (req, res) => {
             });
         }
 
-        // التحقق من الحظر
+        // التحقق من كلمة المرور
+        if (user.password !== password) {
+            return res.status(401).json({
+                success: false,
+                error: 'اسم المستخدم أو كلمة المرور غير صحيحة',
+            });
+        }
+
         if (user.banned) {
             return res.status(403).json({
                 success: false,
@@ -418,7 +278,6 @@ app.post('/api/login', async (req, res) => {
             });
         }
 
-        // التحقق من الموافقة
         if (!user.approved) {
             return res.status(403).json({
                 success: false,
@@ -435,12 +294,10 @@ app.post('/api/login', async (req, res) => {
             console.log(`🔄 تم تحويل المستخدم ${user.username} إلى مجاني (انتهى الاشتراك)`);
         }
 
-        // إنشاء الجلسة
         req.session.userId = user._id;
         req.session.username = user.username;
         req.session.role = user.role;
 
-        // تسجيل الدخول
         console.log(`✅ تسجيل الدخول: ${user.username} (${user.role})`);
 
         res.json({
@@ -465,10 +322,6 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
-/**
- * POST /api/logout - تسجيل الخروج
- * @returns {Object} - تأكيد تسجيل الخروج
- */
 app.post('/api/logout', (req, res) => {
     const username = req.session.username;
     req.session.destroy((err) => {
@@ -484,10 +337,6 @@ app.post('/api/logout', (req, res) => {
     });
 });
 
-/**
- * GET /api/current-user - الحصول على المستخدم الحالي
- * @returns {Object} - بيانات المستخدم أو null
- */
 app.get('/api/current-user', async (req, res) => {
     try {
         const user = await getCurrentUser(req);
@@ -515,22 +364,10 @@ app.get('/api/current-user', async (req, res) => {
     }
 });
 
-/**
- * POST /api/register - تسجيل مستخدم جديد
- * @body {string} username - اسم المستخدم
- * @body {string} email - البريد الإلكتروني
- * @body {string} password - كلمة المرور
- * @body {string} confirmPassword - تأكيد كلمة المرور
- * @body {string} phone - رقم الهاتف (اختياري)
- * @body {string} plan - الخطة (free/paid)
- * @body {Array} selectedGrades - الصفوف المختارة (للمدفوع)
- * @returns {Object} - بيانات المستخدم الجديد
- */
 app.post('/api/register', async (req, res) => {
     try {
         const { username, email, password, confirmPassword, phone, selectedGrades, plan } = req.body;
 
-        // ===== التحقق من صحة الإدخال =====
         const errors = [];
         if (!username || username.length < 3) errors.push('اسم المستخدم يجب أن يكون 3 أحرف على الأقل');
         if (!email || !email.includes('@')) errors.push('البريد الإلكتروني غير صحيح');
@@ -541,7 +378,6 @@ app.post('/api/register', async (req, res) => {
             return res.status(400).json({ success: false, error: errors.join('، ') });
         }
 
-        // ===== التحقق من عدم وجود المستخدم =====
         const existingUser = await User.findOne({ $or: [{ username }, { email }] });
         if (existingUser) {
             return res.status(409).json({
@@ -550,7 +386,6 @@ app.post('/api/register', async (req, res) => {
             });
         }
 
-        // ===== إنشاء المستخدم الجديد =====
         const newUser = new User({
             username: username.trim(),
             email: email.toLowerCase().trim(),
@@ -565,7 +400,6 @@ app.post('/api/register', async (req, res) => {
         await newUser.save();
         console.log(`✅ حساب جديد: ${newUser.username} (${newUser.plan})`);
 
-        // ===== تسجيل الدخول تلقائياً (للمجاني) =====
         if (plan === 'free') {
             req.session.userId = newUser._id;
             req.session.username = newUser.username;
@@ -586,7 +420,6 @@ app.post('/api/register', async (req, res) => {
             });
         }
 
-        // للمدفوع: ينتظر موافقة المدير
         res.status(201).json({
             success: true,
             message: 'تم التسجيل، بانتظار موافقة المدير',
@@ -602,12 +435,9 @@ app.post('/api/register', async (req, res) => {
 });
 
 // ================================================================
-// 8. مسارات API - إدارة المستخدمين (User Management)
+// 8. مسارات API - إدارة المستخدمين (للمدير فقط)
 // ================================================================
 
-/**
- * GET /api/admin/users - جلب جميع المستخدمين (للمدير فقط)
- */
 app.get('/api/admin/users', requireAdmin, async (req, res) => {
     try {
         const users = await User.find({ role: 'student' }).sort({ username: 1 });
@@ -618,24 +448,6 @@ app.get('/api/admin/users', requireAdmin, async (req, res) => {
     }
 });
 
-/**
- * GET /api/admin/users/:id - جلب مستخدم محدد
- */
-app.get('/api/admin/users/:id', requireAdmin, async (req, res) => {
-    try {
-        const user = await User.findById(req.params.id);
-        if (!user) {
-            return res.status(404).json({ error: 'المستخدم غير موجود' });
-        }
-        res.json(user);
-    } catch (error) {
-        res.status(500).json({ error: 'حدث خطأ في الخادم' });
-    }
-});
-
-/**
- * PUT /api/admin/users/:id - تحديث بيانات المستخدم
- */
 app.put('/api/admin/users/:id', requireAdmin, async (req, res) => {
     try {
         const { username, email, password, phone, plan, selectedGrades, subscriptionDuration, banned, approved } = req.body;
@@ -645,13 +457,11 @@ app.put('/api/admin/users/:id', requireAdmin, async (req, res) => {
             return res.status(404).json({ error: 'المستخدم غير موجود' });
         }
 
-        // تحديث الحقول
         if (username) user.username = username.trim();
         if (email) user.email = email.toLowerCase().trim();
         if (password) user.password = password;
         if (phone !== undefined) user.phone = phone.trim();
 
-        // تحديث الخطة
         if (plan) {
             user.plan = plan;
             if (plan === 'free') {
@@ -694,9 +504,6 @@ app.put('/api/admin/users/:id', requireAdmin, async (req, res) => {
     }
 });
 
-/**
- * PUT /api/admin/users/:id/ban - تبديل حالة الحظر
- */
 app.put('/api/admin/users/:id/ban', requireAdmin, async (req, res) => {
     try {
         const user = await User.findById(req.params.id);
@@ -712,9 +519,6 @@ app.put('/api/admin/users/:id/ban', requireAdmin, async (req, res) => {
     }
 });
 
-/**
- * DELETE /api/admin/users/:id - حذف المستخدم
- */
 app.delete('/api/admin/users/:id', requireAdmin, async (req, res) => {
     try {
         const user = await User.findById(req.params.id);
@@ -733,12 +537,9 @@ app.delete('/api/admin/users/:id', requireAdmin, async (req, res) => {
 });
 
 // ================================================================
-// 9. مسارات API - إدارة المحتوى (Content Management)
+// 9. مسارات API - إدارة المحتوى
 // ================================================================
 
-/**
- * GET /api/grades - جلب جميع الصفوف (للجميع)
- */
 app.get('/api/grades', async (req, res) => {
     try {
         const grades = await Grade.find().sort({ id: 1 });
@@ -749,28 +550,6 @@ app.get('/api/grades', async (req, res) => {
     }
 });
 
-/**
- * GET /api/grades/:id - جلب صف محدد
- */
-app.get('/api/grades/:id', async (req, res) => {
-    try {
-        const grade = await Grade.findOne({ id: parseInt(req.params.id) });
-        if (!grade) {
-            return res.status(404).json({ error: 'الصف غير موجود' });
-        }
-        res.json(grade);
-    } catch (error) {
-        res.status(500).json({ error: 'حدث خطأ في الخادم' });
-    }
-});
-
-/**
- * GET /api/grades/:id/content - جلب محتوى الصف (مع صلاحيات)
- * - للزوار: يعرض الأسماء فقط مع `locked: true`
- * - للمستخدمين: يعرض حسب الخطة والصلاحيات
- * - للمدفوعين: يعرض المحتوى الكامل للصفوف المشترك بها
- * - للمدير: يعرض كل شيء
- */
 app.get('/api/grades/:id/content', async (req, res) => {
     try {
         const gradeId = parseInt(req.params.id);
@@ -780,10 +559,8 @@ app.get('/api/grades/:id/content', async (req, res) => {
             return res.status(404).json({ error: 'الصف غير موجود' });
         }
 
-        // الحصول على المستخدم الحالي (إن وجد)
         const user = await getCurrentUser(req);
 
-        // ===== الزوار (غير مسجلين) =====
         if (!user) {
             const publicData = {
                 id: grade.id,
@@ -806,7 +583,6 @@ app.get('/api/grades/:id/content', async (req, res) => {
             return res.json(publicData);
         }
 
-        // ===== مستخدم مسجل =====
         const isAdminUser = user.role === 'admin';
         const isPaidUser = user.plan === 'paid' && (!user.subscriptionEnd || new Date() <= new Date(user.subscriptionEnd));
         const userInGrade = isAdminUser || user.selectedGrades.includes(grade.id) || user.plan === 'free';
@@ -850,12 +626,9 @@ app.get('/api/grades/:id/content', async (req, res) => {
 });
 
 // ================================================================
-// 10. مسارات API - إدارة الصفوف (Admin Only)
+// 10. مسارات API - إدارة الصفوف (للمدير فقط)
 // ================================================================
 
-/**
- * POST /api/admin/grades - إضافة صف جديد
- */
 app.post('/api/admin/grades', requireAdmin, async (req, res) => {
     try {
         const { name } = req.body;
@@ -876,9 +649,6 @@ app.post('/api/admin/grades', requireAdmin, async (req, res) => {
     }
 });
 
-/**
- * PUT /api/admin/grades/:id - تعديل صف
- */
 app.put('/api/admin/grades/:id', requireAdmin, async (req, res) => {
     try {
         const { name } = req.body;
@@ -900,9 +670,6 @@ app.put('/api/admin/grades/:id', requireAdmin, async (req, res) => {
     }
 });
 
-/**
- * DELETE /api/admin/grades/:id - حذف صف
- */
 app.delete('/api/admin/grades/:id', requireAdmin, async (req, res) => {
     try {
         const result = await Grade.deleteOne({ id: parseInt(req.params.id) });
@@ -917,12 +684,9 @@ app.delete('/api/admin/grades/:id', requireAdmin, async (req, res) => {
 });
 
 // ================================================================
-// 11. مسارات API - إدارة المواد (Admin Only)
+// 11. مسارات API - إدارة المواد (للمدير فقط)
 // ================================================================
 
-/**
- * POST /api/admin/grades/:gradeId/subjects - إضافة مادة
- */
 app.post('/api/admin/grades/:gradeId/subjects', requireAdmin, async (req, res) => {
     try {
         const { name } = req.body;
@@ -947,9 +711,6 @@ app.post('/api/admin/grades/:gradeId/subjects', requireAdmin, async (req, res) =
     }
 });
 
-/**
- * PUT /api/admin/grades/:gradeId/subjects/:subjectId - تعديل مادة
- */
 app.put('/api/admin/grades/:gradeId/subjects/:subjectId', requireAdmin, async (req, res) => {
     try {
         const { name } = req.body;
@@ -975,9 +736,6 @@ app.put('/api/admin/grades/:gradeId/subjects/:subjectId', requireAdmin, async (r
     }
 });
 
-/**
- * DELETE /api/admin/grades/:gradeId/subjects/:subjectId - حذف مادة
- */
 app.delete('/api/admin/grades/:gradeId/subjects/:subjectId', requireAdmin, async (req, res) => {
     try {
         const grade = await Grade.findOne({ id: parseInt(req.params.gradeId) });
@@ -1002,12 +760,9 @@ app.delete('/api/admin/grades/:gradeId/subjects/:subjectId', requireAdmin, async
 });
 
 // ================================================================
-// 12. مسارات API - إدارة الوحدات (Admin Only)
+// 12. مسارات API - إدارة الوحدات (للمدير فقط)
 // ================================================================
 
-/**
- * POST /api/admin/grades/:gradeId/subjects/:subjectId/units - إضافة وحدة
- */
 app.post('/api/admin/grades/:gradeId/subjects/:subjectId/units', requireAdmin, async (req, res) => {
     try {
         const { name } = req.body;
@@ -1037,9 +792,6 @@ app.post('/api/admin/grades/:gradeId/subjects/:subjectId/units', requireAdmin, a
     }
 });
 
-/**
- * PUT /api/admin/grades/:gradeId/subjects/:subjectId/units/:unitId - تعديل وحدة
- */
 app.put('/api/admin/grades/:gradeId/subjects/:subjectId/units/:unitId', requireAdmin, async (req, res) => {
     try {
         const { name } = req.body;
@@ -1070,9 +822,6 @@ app.put('/api/admin/grades/:gradeId/subjects/:subjectId/units/:unitId', requireA
     }
 });
 
-/**
- * DELETE /api/admin/grades/:gradeId/subjects/:subjectId/units/:unitId - حذف وحدة
- */
 app.delete('/api/admin/grades/:gradeId/subjects/:subjectId/units/:unitId', requireAdmin, async (req, res) => {
     try {
         const grade = await Grade.findOne({ id: parseInt(req.params.gradeId) });
@@ -1102,12 +851,9 @@ app.delete('/api/admin/grades/:gradeId/subjects/:subjectId/units/:unitId', requi
 });
 
 // ================================================================
-// 13. مسارات API - إدارة الدروس (Admin Only)
+// 13. مسارات API - إدارة الدروس (للمدير فقط)
 // ================================================================
 
-/**
- * POST /api/admin/grades/:gradeId/subjects/:subjectId/units/:unitId/lessons - إضافة درس
- */
 app.post('/api/admin/grades/:gradeId/subjects/:subjectId/units/:unitId/lessons', requireAdmin, async (req, res) => {
     try {
         const { title, video, content, examples, free, exam } = req.body;
@@ -1152,9 +898,6 @@ app.post('/api/admin/grades/:gradeId/subjects/:subjectId/units/:unitId/lessons',
     }
 });
 
-/**
- * PUT /api/admin/grades/:gradeId/subjects/:subjectId/units/:unitId/lessons/:lessonId - تعديل درس
- */
 app.put('/api/admin/grades/:gradeId/subjects/:subjectId/units/:unitId/lessons/:lessonId', requireAdmin, async (req, res) => {
     try {
         const { title, video, content, examples, free, exam } = req.body;
@@ -1195,9 +938,6 @@ app.put('/api/admin/grades/:gradeId/subjects/:subjectId/units/:unitId/lessons/:l
     }
 });
 
-/**
- * DELETE /api/admin/grades/:gradeId/subjects/:subjectId/units/:unitId/lessons/:lessonId - حذف درس
- */
 app.delete('/api/admin/grades/:gradeId/subjects/:subjectId/units/:unitId/lessons/:lessonId', requireAdmin, async (req, res) => {
     try {
         const grade = await Grade.findOne({ id: parseInt(req.params.gradeId) });
@@ -1232,12 +972,9 @@ app.delete('/api/admin/grades/:gradeId/subjects/:subjectId/units/:unitId/lessons
 });
 
 // ================================================================
-// 14. مسارات API - امتحان الوحدة (Admin Only)
+// 14. مسارات API - امتحان الوحدة (للمدير فقط)
 // ================================================================
 
-/**
- * PUT /api/admin/grades/:gradeId/subjects/:subjectId/units/:unitId/exam - تحديث امتحان الوحدة
- */
 app.put('/api/admin/grades/:gradeId/subjects/:subjectId/units/:unitId/exam', requireAdmin, async (req, res) => {
     try {
         const { exam } = req.body;
@@ -1268,24 +1005,23 @@ app.put('/api/admin/grades/:gradeId/subjects/:subjectId/units/:unitId/exam', req
 });
 
 // ================================================================
-// 15. تهيئة قاعدة البيانات (Database Initialization)
+// 15. تهيئة قاعدة البيانات (مع تحديث كلمة مرور admin)
 // ================================================================
 
-/**
- * تهيئة البيانات الأولية عند التشغيل الأول
- * - إنشاء حساب admin (اسم: admin، كلمة سر: admin)
- * - إنشاء 12 صفاً دراسياً
- */
 async function initDatabase() {
     try {
-        // ===== إنشاء حساب admin =====
+        // ===== إعداد كلمة مرور admin الجديدة =====
+        const ADMIN_PASSWORD = 'waseemo123janaloveu'; // <--- غيّرها هنا
+
+        // ===== البحث عن حساب admin =====
         let admin = await User.findOne({ username: 'admin' });
 
         if (!admin) {
+            // إنشاء حساب جديد
             admin = new User({
                 username: 'admin',
                 email: 'admin@deepteach.com',
-                password: 'waseemo123janaloveu',
+                password: ADMIN_PASSWORD,
                 phone: '',
                 role: 'admin',
                 plan: 'paid',
@@ -1294,18 +1030,19 @@ async function initDatabase() {
                 selectedGrades: [],
             });
             await admin.save();
-            console.log('✅ تم إنشاء حساب admin (اسم: admin، كلمة سر: admin)');
+            console.log(`✅ تم إنشاء حساب admin بكلمة مرور: ${ADMIN_PASSWORD}`);
         } else {
-            // التأكد من أن كلمة المرور هي "admin"
-            if (admin.password !== 'waseemo123janaloveu') {
-                admin.password = 'waseemo123janaloveu';
+            // تحديث كلمة المرور إذا كانت مختلفة
+            if (admin.password !== ADMIN_PASSWORD) {
+                admin.password = ADMIN_PASSWORD;
                 await admin.save();
-                console.log('✅ تم إعادة تعيين كلمة مرور admin إلى "waseemo123janaloveu"');
+                console.log(`✅ تم تحديث كلمة مرور admin إلى: ${ADMIN_PASSWORD}`);
+            } else {
+                console.log('✅ كلمة مرور admin صحيحة بالفعل');
             }
-            console.log('✅ حساب admin موجود (اسم: admin، كلمة سر: waseemo123janaloveu)');
         }
 
-        // ===== إنشاء 12 صفاً دراسياً =====
+        // ===== إنشاء 12 صفاً دراسياً إذا لم تكن موجودة =====
         const gradesCount = await Grade.countDocuments();
         if (gradesCount === 0) {
             const gradeNames = [
@@ -1344,7 +1081,7 @@ function startServer() {
         console.log('='.repeat(60));
         console.log(`🚀 DeepTeach Server`);
         console.log(`📡 يعمل على: http://localhost:${PORT}`);
-        console.log(`🔑 حساب admin: admin / admin`);
+        console.log(`🔑 حساب admin: admin / waseemo123janaloveu`);
         console.log(`📦 قاعدة البيانات: ${mongoose.connection.name || 'MongoDB'}`);
         console.log('='.repeat(60));
     });
@@ -1366,26 +1103,20 @@ app.use((req, res) => {
 });
 
 // ================================================================
-// 18. معالجة الأخطاء العامة (Error Handler)
+// 18. معالجة الأخطاء العامة
 // ================================================================
 
 app.use((err, req, res, next) => {
     console.error('❌ خطأ غير متوقع:');
     console.error(err.stack);
-
-    // لا تكشف تفاصيل الأخطاء في الإنتاج
-    const message = process.env.NODE_ENV === 'production'
-        ? 'حدث خطأ داخلي في الخادم'
-        : err.message;
-
     res.status(500).json({
         success: false,
-        error: message,
+        error: 'حدث خطأ داخلي في الخادم',
     });
 });
 
 // ================================================================
-// 19. تصدير التطبيق (للاختبار)
+// 19. تصدير التطبيق
 // ================================================================
 
 module.exports = app;
