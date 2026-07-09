@@ -1,7 +1,7 @@
 /**
  * ================================================================
  * DeepTeach - JavaScript الرئيسي (Frontend Logic)
- * الإصدار 3.0.0 (الكامل المتكامل)
+ * الإصدار 4.0.0 (المعدل النهائي)
  * ================================================================
  * 
  * 🧠  العمارة: Module Pattern مع إدارة حالة مركزية
@@ -9,6 +9,7 @@
  * 📡  الاتصال: Fetch API مع معالجة الأخطاء الموحدة
  * 🎨  التفاعل: تحديث واجهة المستخدم ديناميكياً
  * 🔐  المصادقة: جلسات (Sessions) مع تذكر المستخدم
+ * 🛡️  الأمان: التحقق من الصلاحيات قبل أي عملية إدارة
  * 
  * ================================================================
  */
@@ -50,7 +51,7 @@ const AppState = {
         gradeId: null,
         subjectId: null,
         unitId: null,
-        type: 'lesson' // 'lesson' | 'unit'
+        type: 'lesson'
     }
 };
 
@@ -82,12 +83,11 @@ const DOM = {
 // ================================================================
 
 /**
- * عرض رسالة للمستخدم (تحسين لاحقاً باستخدام Toast)
+ * عرض رسالة للمستخدم
  * @param {string} message - نص الرسالة
  * @param {string} type - نوع الرسالة (error, success, info)
  */
 function showToast(message, type = 'info') {
-    // مؤقتاً نستخدم alert، يمكن استبدالها بنظام Toast احترافي
     const prefix = type === 'error' ? '❌ ' : type === 'success' ? '✅ ' : 'ℹ️ ';
     alert(prefix + message);
 }
@@ -135,30 +135,99 @@ function generateTempId() {
 }
 
 // ================================================================
-// 4. إدارة الشريط الجانبي (Sidebar Management)
+// 4. إدارة المصادقة والصلاحيات (Auth & Permissions)
 // ================================================================
 
 /**
- * تبديل حالة الشريط الجانبي (للجوال)
+ * التحقق من أن المستخدم الحالي هو مدير
+ * إذا لم يكن مديراً، يعرض رسالة خطأ ويعيد التوجيه
+ * @returns {boolean} - true إذا كان مديراً، false إذا لم يكن
  */
+function ensureAdmin() {
+    if (!AppState.currentUser) {
+        showToast('يجب تسجيل الدخول أولاً', 'error');
+        navigateTo('home');
+        return false;
+    }
+    if (AppState.currentUser.role !== 'admin') {
+        showToast('غير مصرح: هذه العملية تتطلب صلاحيات المدير', 'error');
+        navigateTo('home');
+        return false;
+    }
+    return true;
+}
+
+/**
+ * التحقق من صحة الجلسة الحالية
+ * إذا كانت الجلسة غير صالحة، يقوم بتسجيل الخروج
+ * @returns {Promise<boolean>}
+ */
+async function checkSessionValidity() {
+    try {
+        const response = await fetch('/api/current-user');
+        const data = await response.json();
+        if (!data.user) {
+            // الجلسة غير صالحة
+            AppState.currentUser = null;
+            updateUIForUser();
+            navigateTo('home');
+            return false;
+        }
+        // تحديث بيانات المستخدم إذا تغيرت
+        AppState.currentUser = data.user;
+        updateUIForUser();
+        return true;
+    } catch (error) {
+        console.error('❌ خطأ في التحقق من الجلسة:', error);
+        return false;
+    }
+}
+
+/**
+ * معالجة أخطاء API المتعلقة بالمصادقة
+ * @param {Response} response - كائن الاستجابة
+ * @param {string} defaultMessage - رسالة الخطأ الافتراضية
+ * @returns {Promise<boolean>} - true إذا كان الخطأ متعلقاً بالمصادقة
+ */
+async function handleAuthError(response, defaultMessage = 'حدث خطأ') {
+    if (response.status === 401 || response.status === 403) {
+        // جلسة منتهية أو غير مصرح
+        showToast('انتهت صلاحية الجلسة. يرجى تسجيل الدخول مرة أخرى.', 'error');
+        AppState.currentUser = null;
+        updateUIForUser();
+        navigateTo('home');
+        return true;
+    }
+    
+    try {
+        const data = await response.json();
+        if (data.error) {
+            showToast(data.error, 'error');
+            return true;
+        }
+    } catch (e) {
+        // لا يمكن قراءة JSON
+    }
+    
+    showToast(defaultMessage, 'error');
+    return false;
+}
+
+// ================================================================
+// 5. إدارة الشريط الجانبي (Sidebar Management)
+// ================================================================
+
 function toggleSidebar() {
     DOM.sidebar.classList.toggle('open');
     const isOpen = DOM.sidebar.classList.contains('open');
     DOM.sidebarToggle.setAttribute('aria-expanded', isOpen);
 }
 
-/**
- * إغلاق الشريط الجانبي (للجوال)
- */
 function closeSidebar() {
     DOM.sidebar.classList.remove('open');
     DOM.sidebarToggle.setAttribute('aria-expanded', 'false');
 }
 
-/**
- * تحديث الروابط النشطة في الشريط الجانبي
- * @param {string} page - اسم الصفحة
- */
 function setActiveLink(page) {
     DOM.navLinks.forEach(link => {
         link.classList.toggle('active', link.dataset.page === page);
@@ -166,25 +235,17 @@ function setActiveLink(page) {
 }
 
 // ================================================================
-// 5. التنقل بين الصفحات (Navigation)
+// 6. التنقل بين الصفحات (Navigation)
 // ================================================================
 
-/**
- * التنقل إلى صفحة معينة
- * @param {string} page - اسم الصفحة
- * @param {*} data - بيانات إضافية (اختياري)
- */
 function navigateTo(page, data = null) {
-    // إغلاق الشريط الجانبي في الجوال
     if (window.innerWidth <= 768) {
         closeSidebar();
     }
 
-    // تحديث الصفحة الحالية
     AppState.currentPage = page;
     setActiveLink(page);
 
-    // تنفيذ الصفحة المطلوبة
     switch (page) {
         case 'home':
             renderHome();
@@ -208,30 +269,23 @@ function navigateTo(page, data = null) {
             renderHome();
     }
 
-    // التمرير للأعلى
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 // ================================================================
-// 6. إدارة المستخدم (User Management)
+// 7. إدارة المستخدم (User Management)
 // ================================================================
 
-/**
- * تحديث واجهة المستخدم بناءً على حالة تسجيل الدخول
- */
 function updateUIForUser() {
     const isLoggedIn = !!AppState.currentUser;
     const isAdmin = isLoggedIn && AppState.currentUser.role === 'admin';
 
-    // أزرار الدخول/التسجيل
     DOM.authButtons.style.display = isLoggedIn ? 'none' : 'flex';
     DOM.userInfo.style.display = isLoggedIn ? 'flex' : 'none';
 
     if (isLoggedIn) {
         DOM.userDisplay.textContent = AppState.currentUser.username + (isAdmin ? ' 👑' : '');
         DOM.sidebarUserInfo.textContent = AppState.currentUser.username + (isAdmin ? ' (مشرف)' : '');
-        
-        // إظهار روابط الحساب والإدارة
         DOM.profileNav.style.display = 'block';
         DOM.adminUsersNav.style.display = isAdmin ? 'block' : 'none';
         DOM.adminContentNav.style.display = isAdmin ? 'block' : 'none';
@@ -243,9 +297,6 @@ function updateUIForUser() {
     }
 }
 
-/**
- * التحقق من الجلسة الحالية عند تحميل الصفحة
- */
 async function checkCurrentUser() {
     try {
         const response = await fetch('/api/current-user');
@@ -267,9 +318,6 @@ async function checkCurrentUser() {
     }
 }
 
-/**
- * تسجيل الخروج
- */
 async function logout() {
     try {
         await fetch('/api/logout', { method: 'POST' });
@@ -284,14 +332,11 @@ async function logout() {
 }
 
 // ================================================================
-// 7. عرض الصفحات (Page Rendering)
+// 8. عرض الصفحات (Page Rendering)
 // ================================================================
 
-// ==================== 7.1 الصفحة الرئيسية العامة (للزوار) ====================
+// ==================== 8.1 الصفحة الرئيسية العامة ====================
 
-/**
- * عرض الصفحة الرئيسية للزوار (غير مسجلين)
- */
 function renderPublicHome() {
     DOM.mainContent.innerHTML = `
         <div class="glass-card" style="text-align:center; padding:40px 20px; margin-bottom:30px;">
@@ -304,7 +349,6 @@ function renderPublicHome() {
                 <button class="btn btn-outline" onclick="showRegisterModal()">سجل مجاناً</button>
             </div>
         </div>
-
         <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:20px; margin-bottom:30px;">
             <div class="glass-card">
                 <i class="fas fa-book-open" style="font-size:2rem; color:var(--color-gold);"></i>
@@ -327,16 +371,12 @@ function renderPublicHome() {
                 <p style="color:var(--color-text-muted);">راقب تطورك واحصل على شارات عند إتمام الدروس</p>
             </div>
         </div>
-
         <h2>استكشف الصفوف الدراسية</h2>
         <div id="gradesGrid" class="grades-grid"></div>
     `;
     loadGradesForPublic();
 }
 
-/**
- * تحميل الصفوف للعرض العام (بدون محتوى داخلي)
- */
 async function loadGradesForPublic() {
     try {
         const response = await fetch('/api/grades');
@@ -357,10 +397,6 @@ async function loadGradesForPublic() {
     }
 }
 
-/**
- * عرض صف للزوار (يطلب تسجيل الدخول)
- * @param {number} gradeId
- */
 function viewGradePublic(gradeId) {
     if (AppState.currentUser) {
         viewGradeContent(gradeId);
@@ -369,11 +405,8 @@ function viewGradePublic(gradeId) {
     }
 }
 
-// ==================== 7.2 الصفحة الرئيسية للمستخدم ====================
+// ==================== 8.2 الصفحة الرئيسية للمستخدم ====================
 
-/**
- * عرض الصفحة الرئيسية للمستخدم المسجل
- */
 function renderHome() {
     if (!AppState.currentUser) {
         renderPublicHome();
@@ -405,9 +438,6 @@ function renderHome() {
     loadUserGrades();
 }
 
-/**
- * تحميل صفوف المستخدم حسب صلاحياته
- */
 async function loadUserGrades() {
     try {
         const response = await fetch('/api/grades');
@@ -439,11 +469,8 @@ async function loadUserGrades() {
     }
 }
 
-// ==================== 7.3 صفحة الصفوف ====================
+// ==================== 8.3 صفحة الصفوف ====================
 
-/**
- * عرض صفحة الصفوف
- */
 function renderGrades() {
     DOM.mainContent.innerHTML = `
         <div style="display:flex; align-items:center; gap:15px; margin-bottom:20px;">
@@ -459,11 +486,8 @@ function renderGrades() {
     }
 }
 
-// ==================== 7.4 صفحة "عن المنصة" ====================
+// ==================== 8.4 صفحة "عن المنصة" ====================
 
-/**
- * عرض صفحة "عن المنصة"
- */
 function renderAbout() {
     DOM.mainContent.innerHTML = `
         <h2>عن منصة DeepTeach</h2>
@@ -482,11 +506,8 @@ function renderAbout() {
     `;
 }
 
-// ==================== 7.5 صفحة الحساب ====================
+// ==================== 8.5 صفحة الحساب ====================
 
-/**
- * عرض صفحة الحساب الشخصي
- */
 function renderProfile() {
     if (!AppState.currentUser) {
         showLoginModal('يجب تسجيل الدخول أولاً');
@@ -512,13 +533,9 @@ function renderProfile() {
 }
 
 // ================================================================
-// 8. عرض المحتوى (صفوف، مواد، وحدات، دروس)
+// 9. عرض المحتوى (صفوف، مواد، وحدات، دروس)
 // ================================================================
 
-/**
- * عرض محتوى صف معين
- * @param {number} gradeId
- */
 async function viewGradeContent(gradeId) {
     try {
         const response = await fetch(`/api/grades/${gradeId}/content`);
@@ -535,10 +552,6 @@ async function viewGradeContent(gradeId) {
     }
 }
 
-/**
- * عرض محتوى الصف (مواد)
- * @param {Object} grade
- */
 function renderGradeContent(grade) {
     DOM.mainContent.innerHTML = `
         <div style="display:flex; align-items:center; gap:15px; margin-bottom:20px;">
@@ -556,11 +569,6 @@ function renderGradeContent(grade) {
     `;
 }
 
-/**
- * عرض مادة (وحدات)
- * @param {number} gradeId
- * @param {number} subjectId
- */
 async function viewSubject(gradeId, subjectId) {
     try {
         const response = await fetch(`/api/grades/${gradeId}/content`);
@@ -578,11 +586,6 @@ async function viewSubject(gradeId, subjectId) {
     }
 }
 
-/**
- * عرض محتوى المادة (وحدات)
- * @param {number} gradeId
- * @param {Object} subject
- */
 function renderSubjectContent(gradeId, subject) {
     DOM.mainContent.innerHTML = `
         <div style="display:flex; align-items:center; gap:15px; margin-bottom:20px;">
@@ -601,12 +604,6 @@ function renderSubjectContent(gradeId, subject) {
     `;
 }
 
-/**
- * عرض وحدة (دروس + امتحان)
- * @param {number} gradeId
- * @param {number} subjectId
- * @param {number} unitId
- */
 async function viewUnit(gradeId, subjectId, unitId) {
     try {
         const response = await fetch(`/api/grades/${gradeId}/content`);
@@ -623,12 +620,6 @@ async function viewUnit(gradeId, subjectId, unitId) {
     }
 }
 
-/**
- * عرض محتوى الوحدة (دروس + امتحان الوحدة)
- * @param {number} gradeId
- * @param {number} subjectId
- * @param {Object} unit
- */
 function renderUnitContent(gradeId, subjectId, unit) {
     DOM.mainContent.innerHTML = `
         <div style="display:flex; align-items:center; gap:15px; margin-bottom:20px;">
@@ -658,13 +649,6 @@ function renderUnitContent(gradeId, subjectId, unit) {
     `;
 }
 
-/**
- * عرض درس محدد
- * @param {number} gradeId
- * @param {number} subjectId
- * @param {number} unitId
- * @param {number} lessonId
- */
 async function viewLesson(gradeId, subjectId, unitId, lessonId) {
     try {
         const response = await fetch(`/api/grades/${gradeId}/content`);
@@ -688,13 +672,6 @@ async function viewLesson(gradeId, subjectId, unitId, lessonId) {
     }
 }
 
-/**
- * عرض محتوى الدرس (فيديو، شرح، أمثلة، امتحان)
- * @param {number} gradeId
- * @param {number} subjectId
- * @param {number} unitId
- * @param {Object} lesson
- */
 function renderLessonContent(gradeId, subjectId, unitId, lesson) {
     DOM.mainContent.innerHTML = `
         <div style="display:flex; align-items:center; gap:15px; margin-bottom:20px;">
@@ -731,12 +708,9 @@ function renderLessonContent(gradeId, subjectId, unitId, lesson) {
 }
 
 // ================================================================
-// 9. الامتحانات (Exams)
+// 10. الامتحانات (Exams)
 // ================================================================
 
-/**
- * بدء امتحان الدرس
- */
 function startLessonExam(gradeId, subjectId, unitId, lessonId) {
     fetch(`/api/grades/${gradeId}/content`)
         .then(res => res.json())
@@ -767,9 +741,6 @@ function startLessonExam(gradeId, subjectId, unitId, lessonId) {
         });
 }
 
-/**
- * بدء امتحان الوحدة
- */
 function startUnitExam(gradeId, subjectId, unitId) {
     fetch(`/api/grades/${gradeId}/content`)
         .then(res => res.json())
@@ -798,9 +769,6 @@ function startUnitExam(gradeId, subjectId, unitId) {
         });
 }
 
-/**
- * عرض سؤال الامتحان الحالي
- */
 function renderExam() {
     const exam = AppState.currentExam;
     if (exam.currentIndex >= exam.questions.length) {
@@ -831,10 +799,6 @@ function renderExam() {
     `;
 }
 
-/**
- * اختيار إجابة في الامتحان
- * @param {number} idx
- */
 function selectExamAnswer(idx) {
     const exam = AppState.currentExam;
     exam.answers[exam.currentIndex] = idx;
@@ -844,9 +808,6 @@ function selectExamAnswer(idx) {
     document.getElementById('examNextBtn').disabled = false;
 }
 
-/**
- * الانتقال إلى السؤال التالي
- */
 function nextExamQuestion() {
     const exam = AppState.currentExam;
     if (exam.answers[exam.currentIndex] === undefined) {
@@ -857,9 +818,6 @@ function nextExamQuestion() {
     renderExam();
 }
 
-/**
- * إنهاء الامتحان وعرض النتيجة
- */
 function finishExam() {
     const exam = AppState.currentExam;
     let correct = 0;
@@ -880,20 +838,27 @@ function finishExam() {
 }
 
 // ================================================================
-// 10. إدارة المستخدمين (Admin - Users Management)
+// 11. إدارة المستخدمين (Admin - Users Management)
 // ================================================================
 
-/**
- * عرض لوحة إدارة المستخدمين
- */
 async function renderAdminUsers() {
-    if (!AppState.currentUser || AppState.currentUser.role !== 'admin') {
-        showToast('غير مصرح', 'error');
-        return;
-    }
+    // التحقق من صلاحيات المدير
+    if (!ensureAdmin()) return;
 
     try {
+        // التحقق من صحة الجلسة
+        const isValid = await checkSessionValidity();
+        if (!isValid) return;
+
         const response = await fetch('/api/admin/users');
+        
+        // معالجة أخطاء المصادقة
+        if (response.status === 401 || response.status === 403) {
+            showToast('انتهت صلاحية الجلسة. يرجى تسجيل الدخول مرة أخرى.', 'error');
+            logout();
+            return;
+        }
+
         const users = await response.json();
         AppState.allUsers = users;
 
@@ -949,9 +914,6 @@ async function renderAdminUsers() {
     }
 }
 
-/**
- * تصفية المستخدمين (بحث)
- */
 function filterUsers() {
     const query = document.getElementById('userSearchInput')?.value?.toLowerCase() || '';
     const rows = document.querySelectorAll('#usersTableBody tr');
@@ -961,11 +923,9 @@ function filterUsers() {
     });
 }
 
-/**
- * تعديل بيانات مستخدم
- * @param {string} userId
- */
 async function editUser(userId) {
+    if (!ensureAdmin()) return;
+    
     const user = AppState.allUsers.find(u => u._id === userId);
     if (!user) return;
 
@@ -987,6 +947,13 @@ async function editUser(userId) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         });
+        
+        if (response.status === 401 || response.status === 403) {
+            showToast('انتهت صلاحية الجلسة. يرجى تسجيل الدخول مرة أخرى.', 'error');
+            logout();
+            return;
+        }
+
         const result = await response.json();
         if (result.success) {
             showToast('✅ تم تحديث بيانات المستخدم', 'success');
@@ -1000,14 +967,19 @@ async function editUser(userId) {
     }
 }
 
-/**
- * تبديل حالة حظر المستخدم
- * @param {string} userId
- */
 async function toggleBanUser(userId) {
+    if (!ensureAdmin()) return;
     if (!confirm('هل تريد تبديل حالة الحظر لهذا المستخدم؟')) return;
+    
     try {
         const response = await fetch(`/api/admin/users/${userId}/ban`, { method: 'PUT' });
+        
+        if (response.status === 401 || response.status === 403) {
+            showToast('انتهت صلاحية الجلسة. يرجى تسجيل الدخول مرة أخرى.', 'error');
+            logout();
+            return;
+        }
+
         const data = await response.json();
         if (data.success) {
             showToast(data.banned ? '✅ تم حظر المستخدم' : '✅ تم إلغاء الحظر', 'success');
@@ -1019,14 +991,19 @@ async function toggleBanUser(userId) {
     }
 }
 
-/**
- * حذف مستخدم
- * @param {string} userId
- */
 async function deleteUser(userId) {
+    if (!ensureAdmin()) return;
     if (!confirm('⚠️ هل أنت متأكد من حذف هذا المستخدم نهائياً؟')) return;
+    
     try {
         const response = await fetch(`/api/admin/users/${userId}`, { method: 'DELETE' });
+        
+        if (response.status === 401 || response.status === 403) {
+            showToast('انتهت صلاحية الجلسة. يرجى تسجيل الدخول مرة أخرى.', 'error');
+            logout();
+            return;
+        }
+
         const data = await response.json();
         if (data.success) {
             showToast('✅ تم حذف المستخدم', 'success');
@@ -1038,11 +1015,9 @@ async function deleteUser(userId) {
     }
 }
 
-/**
- * عرض نافذة ترقية المستخدم
- * @param {string} userId
- */
 function showUpgradeUser(userId) {
+    if (!ensureAdmin()) return;
+    
     const user = AppState.allUsers.find(u => u._id === userId);
     if (!user) return;
 
@@ -1073,24 +1048,27 @@ function showUpgradeUser(userId) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
     })
-    .then(res => res.json())
+    .then(res => {
+        if (res.status === 401 || res.status === 403) {
+            showToast('انتهت صلاحية الجلسة. يرجى تسجيل الدخول مرة أخرى.', 'error');
+            logout();
+            return;
+        }
+        return res.json();
+    })
     .then(result => {
-        if (result.success) {
+        if (result && result.success) {
             showToast('✅ تم ترقية المستخدم بنجاح', 'success');
             renderAdminUsers();
-        } else {
+        } else if (result) {
             showToast('❌ ' + (result.error || 'فشل الترقية'), 'error');
         }
     })
     .catch(() => showToast('حدث خطأ في الاتصال', 'error'));
 }
 
-/**
- * تغيير خطة المستخدم (مجاني/مدفوع)
- * @param {string} userId
- * @param {string} plan
- */
 async function setUserPlan(userId, plan) {
+    if (!ensureAdmin()) return;
     if (!confirm(`هل تريد تغيير خطة هذا المستخدم إلى ${plan === 'free' ? 'مجانية' : 'مدفوعة'}؟`)) return;
 
     const data = { plan };
@@ -1122,6 +1100,13 @@ async function setUserPlan(userId, plan) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         });
+        
+        if (response.status === 401 || response.status === 403) {
+            showToast('انتهت صلاحية الجلسة. يرجى تسجيل الدخول مرة أخرى.', 'error');
+            logout();
+            return;
+        }
+
         const result = await response.json();
         if (result.success) {
             showToast('✅ تم تغيير الخطة', 'success');
@@ -1136,17 +1121,11 @@ async function setUserPlan(userId, plan) {
 }
 
 // ================================================================
-// 11. إدارة المحتوى (Admin - Content Management)
+// 12. إدارة المحتوى (Admin - Content Management)
 // ================================================================
 
-/**
- * عرض لوحة إدارة المحتوى
- */
 async function renderAdminContent() {
-    if (!AppState.currentUser || AppState.currentUser.role !== 'admin') {
-        showToast('غير مصرح', 'error');
-        return;
-    }
+    if (!ensureAdmin()) return;
 
     DOM.mainContent.innerHTML = `
         <div style="display:flex; align-items:center; gap:15px; margin-bottom:20px;">
@@ -1162,12 +1141,18 @@ async function renderAdminContent() {
     await loadAdminContentTree();
 }
 
-/**
- * تحميل شجرة المحتوى للإدارة
- */
 async function loadAdminContentTree() {
+    if (!ensureAdmin()) return;
+
     try {
         const response = await fetch('/api/grades');
+        
+        if (response.status === 401 || response.status === 403) {
+            showToast('انتهت صلاحية الجلسة. يرجى تسجيل الدخول مرة أخرى.', 'error');
+            logout();
+            return;
+        }
+
         const grades = await response.json();
         AppState.allGrades = grades;
         const container = document.getElementById('adminContentTree');
@@ -1235,14 +1220,24 @@ async function loadAdminContentTree() {
 // ====== دوال إدارة الصفوف ======
 
 async function showAddGrade() {
+    if (!ensureAdmin()) return;
+
     const name = prompt('أدخل اسم الصف الجديد:');
     if (!name) return;
+    
     try {
         const response = await fetch('/api/admin/grades', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ name: name.trim() })
         });
+
+        if (response.status === 401 || response.status === 403) {
+            showToast('انتهت صلاحية الجلسة. يرجى تسجيل الدخول مرة أخرى.', 'error');
+            logout();
+            return;
+        }
+
         const data = await response.json();
         if (data.success) {
             showToast('✅ تم إضافة الصف', 'success');
@@ -1257,16 +1252,26 @@ async function showAddGrade() {
 }
 
 async function editGrade(gradeId) {
+    if (!ensureAdmin()) return;
+    
     const grade = AppState.allGrades.find(g => g.id === gradeId);
     if (!grade) return;
     const newName = prompt('اسم الصف الجديد:', grade.name);
     if (!newName) return;
+    
     try {
         const response = await fetch(`/api/admin/grades/${gradeId}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ name: newName.trim() })
         });
+
+        if (response.status === 401 || response.status === 403) {
+            showToast('انتهت صلاحية الجلسة. يرجى تسجيل الدخول مرة أخرى.', 'error');
+            logout();
+            return;
+        }
+
         const data = await response.json();
         if (data.success) {
             showToast('✅ تم تعديل الصف', 'success');
@@ -1281,9 +1286,18 @@ async function editGrade(gradeId) {
 }
 
 async function deleteGrade(gradeId) {
+    if (!ensureAdmin()) return;
     if (!confirm('هل أنت متأكد من حذف هذا الصف وجميع محتوياته؟')) return;
+    
     try {
         const response = await fetch(`/api/admin/grades/${gradeId}`, { method: 'DELETE' });
+
+        if (response.status === 401 || response.status === 403) {
+            showToast('انتهت صلاحية الجلسة. يرجى تسجيل الدخول مرة أخرى.', 'error');
+            logout();
+            return;
+        }
+
         const data = await response.json();
         if (data.success) {
             showToast('✅ تم حذف الصف', 'success');
@@ -1300,14 +1314,24 @@ async function deleteGrade(gradeId) {
 // ====== دوال إدارة المواد ======
 
 async function showAddSubject(gradeId) {
+    if (!ensureAdmin()) return;
+
     const name = prompt('أدخل اسم المادة الجديدة:');
     if (!name) return;
+    
     try {
         const response = await fetch(`/api/admin/grades/${gradeId}/subjects`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ name: name.trim() })
         });
+
+        if (response.status === 401 || response.status === 403) {
+            showToast('انتهت صلاحية الجلسة. يرجى تسجيل الدخول مرة أخرى.', 'error');
+            logout();
+            return;
+        }
+
         const data = await response.json();
         if (data.success) {
             showToast('✅ تم إضافة المادة', 'success');
@@ -1322,18 +1346,28 @@ async function showAddSubject(gradeId) {
 }
 
 async function editSubject(gradeId, subjectId) {
+    if (!ensureAdmin()) return;
+    
     const grade = AppState.allGrades.find(g => g.id === gradeId);
     if (!grade) return;
     const subject = grade.subjects.find(s => s.id === subjectId);
     if (!subject) return;
     const newName = prompt('اسم المادة الجديد:', subject.name);
     if (!newName) return;
+    
     try {
         const response = await fetch(`/api/admin/grades/${gradeId}/subjects/${subjectId}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ name: newName.trim() })
         });
+
+        if (response.status === 401 || response.status === 403) {
+            showToast('انتهت صلاحية الجلسة. يرجى تسجيل الدخول مرة أخرى.', 'error');
+            logout();
+            return;
+        }
+
         const data = await response.json();
         if (data.success) {
             showToast('✅ تم تعديل المادة', 'success');
@@ -1348,9 +1382,18 @@ async function editSubject(gradeId, subjectId) {
 }
 
 async function deleteSubject(gradeId, subjectId) {
+    if (!ensureAdmin()) return;
     if (!confirm('حذف هذه المادة وجميع محتوياتها؟')) return;
+    
     try {
         const response = await fetch(`/api/admin/grades/${gradeId}/subjects/${subjectId}`, { method: 'DELETE' });
+
+        if (response.status === 401 || response.status === 403) {
+            showToast('انتهت صلاحية الجلسة. يرجى تسجيل الدخول مرة أخرى.', 'error');
+            logout();
+            return;
+        }
+
         const data = await response.json();
         if (data.success) {
             showToast('✅ تم حذف المادة', 'success');
@@ -1367,14 +1410,24 @@ async function deleteSubject(gradeId, subjectId) {
 // ====== دوال إدارة الوحدات ======
 
 async function showAddUnit(gradeId, subjectId) {
+    if (!ensureAdmin()) return;
+
     const name = prompt('أدخل اسم الوحدة الجديدة:');
     if (!name) return;
+    
     try {
         const response = await fetch(`/api/admin/grades/${gradeId}/subjects/${subjectId}/units`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ name: name.trim() })
         });
+
+        if (response.status === 401 || response.status === 403) {
+            showToast('انتهت صلاحية الجلسة. يرجى تسجيل الدخول مرة أخرى.', 'error');
+            logout();
+            return;
+        }
+
         const data = await response.json();
         if (data.success) {
             showToast('✅ تم إضافة الوحدة', 'success');
@@ -1389,6 +1442,8 @@ async function showAddUnit(gradeId, subjectId) {
 }
 
 async function editUnit(gradeId, subjectId, unitId) {
+    if (!ensureAdmin()) return;
+    
     const grade = AppState.allGrades.find(g => g.id === gradeId);
     if (!grade) return;
     const subject = grade.subjects.find(s => s.id === subjectId);
@@ -1397,12 +1452,20 @@ async function editUnit(gradeId, subjectId, unitId) {
     if (!unit) return;
     const newName = prompt('اسم الوحدة الجديد:', unit.name);
     if (!newName) return;
+    
     try {
         const response = await fetch(`/api/admin/grades/${gradeId}/subjects/${subjectId}/units/${unitId}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ name: newName.trim() })
         });
+
+        if (response.status === 401 || response.status === 403) {
+            showToast('انتهت صلاحية الجلسة. يرجى تسجيل الدخول مرة أخرى.', 'error');
+            logout();
+            return;
+        }
+
         const data = await response.json();
         if (data.success) {
             showToast('✅ تم تعديل الوحدة', 'success');
@@ -1417,9 +1480,18 @@ async function editUnit(gradeId, subjectId, unitId) {
 }
 
 async function deleteUnit(gradeId, subjectId, unitId) {
+    if (!ensureAdmin()) return;
     if (!confirm('حذف هذه الوحدة وجميع دروسها؟')) return;
+    
     try {
         const response = await fetch(`/api/admin/grades/${gradeId}/subjects/${subjectId}/units/${unitId}`, { method: 'DELETE' });
+
+        if (response.status === 401 || response.status === 403) {
+            showToast('انتهت صلاحية الجلسة. يرجى تسجيل الدخول مرة أخرى.', 'error');
+            logout();
+            return;
+        }
+
         const data = await response.json();
         if (data.success) {
             showToast('✅ تم حذف الوحدة', 'success');
@@ -1436,6 +1508,8 @@ async function deleteUnit(gradeId, subjectId, unitId) {
 // ====== دوال إدارة الدروس ======
 
 async function showAddLesson(gradeId, subjectId, unitId) {
+    if (!ensureAdmin()) return;
+
     const title = prompt('عنوان الدرس:');
     if (!title) return;
     const video = prompt('رابط فيديو (YouTube embed URL):', '');
@@ -1458,12 +1532,20 @@ async function showAddLesson(gradeId, subjectId, unitId) {
     }
 
     const data = { title: title.trim(), video, content, examples, free, exam };
+    
     try {
         const response = await fetch(`/api/admin/grades/${gradeId}/subjects/${subjectId}/units/${unitId}/lessons`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         });
+
+        if (response.status === 401 || response.status === 403) {
+            showToast('انتهت صلاحية الجلسة. يرجى تسجيل الدخول مرة أخرى.', 'error');
+            logout();
+            return;
+        }
+
         const result = await response.json();
         if (result.success) {
             showToast('✅ تم إضافة الدرس', 'success');
@@ -1478,6 +1560,8 @@ async function showAddLesson(gradeId, subjectId, unitId) {
 }
 
 async function editLessonContent(gradeId, subjectId, unitId, lessonId) {
+    if (!ensureAdmin()) return;
+    
     const grade = AppState.allGrades.find(g => g.id === gradeId);
     if (!grade) return;
     const subject = grade.subjects.find(s => s.id === subjectId);
@@ -1508,6 +1592,13 @@ async function editLessonContent(gradeId, subjectId, unitId, lessonId) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         });
+
+        if (response.status === 401 || response.status === 403) {
+            showToast('انتهت صلاحية الجلسة. يرجى تسجيل الدخول مرة أخرى.', 'error');
+            logout();
+            return;
+        }
+
         const result = await response.json();
         if (result.success) {
             showToast('✅ تم تعديل الدرس', 'success');
@@ -1522,9 +1613,18 @@ async function editLessonContent(gradeId, subjectId, unitId, lessonId) {
 }
 
 async function deleteLesson(gradeId, subjectId, unitId, lessonId) {
+    if (!ensureAdmin()) return;
     if (!confirm('حذف هذا الدرس؟')) return;
+    
     try {
         const response = await fetch(`/api/admin/grades/${gradeId}/subjects/${subjectId}/units/${unitId}/lessons/${lessonId}`, { method: 'DELETE' });
+
+        if (response.status === 401 || response.status === 403) {
+            showToast('انتهت صلاحية الجلسة. يرجى تسجيل الدخول مرة أخرى.', 'error');
+            logout();
+            return;
+        }
+
         const result = await response.json();
         if (result.success) {
             showToast('✅ تم حذف الدرس', 'success');
@@ -1539,6 +1639,8 @@ async function deleteLesson(gradeId, subjectId, unitId, lessonId) {
 }
 
 async function editUnitExam(gradeId, subjectId, unitId) {
+    if (!ensureAdmin()) return;
+    
     const grade = AppState.allGrades.find(g => g.id === gradeId);
     if (!grade) return;
     const subject = grade.subjects.find(s => s.id === subjectId);
@@ -1571,6 +1673,13 @@ async function editUnitExam(gradeId, subjectId, unitId) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ exam })
         });
+
+        if (response.status === 401 || response.status === 403) {
+            showToast('انتهت صلاحية الجلسة. يرجى تسجيل الدخول مرة أخرى.', 'error');
+            logout();
+            return;
+        }
+
         const result = await response.json();
         if (result.success) {
             showToast('✅ تم تحديث امتحان الوحدة', 'success');
@@ -1585,13 +1694,9 @@ async function editUnitExam(gradeId, subjectId, unitId) {
 }
 
 // ================================================================
-// 12. تسجيل الدخول والتسجيل (Login & Register)
+// 13. تسجيل الدخول والتسجيل (Login & Register)
 // ================================================================
 
-/**
- * عرض نافذة تسجيل الدخول
- * @param {string} message
- */
 function showLoginModal(message = '') {
     DOM.loginModal.style.display = 'flex';
     const errorEl = document.getElementById('loginError');
@@ -1601,9 +1706,6 @@ function showLoginModal(message = '') {
     document.getElementById('loginPassword').value = '';
 }
 
-/**
- * عرض نافذة التسجيل
- */
 function showRegisterModal() {
     DOM.registerModal.style.display = 'flex';
     document.getElementById('regError').style.display = 'none';
@@ -1611,33 +1713,20 @@ function showRegisterModal() {
     toggleGradeSelection();
 }
 
-/**
- * التبديل من تسجيل الدخول إلى التسجيل
- */
 function switchToRegister() {
     closeModal('loginModal');
     showRegisterModal();
 }
 
-/**
- * التبديل من التسجيل إلى تسجيل الدخول
- */
 function switchToLogin() {
     closeModal('registerModal');
     showLoginModal();
 }
 
-/**
- * إغلاق نافذة منبثقة
- * @param {string} id
- */
 function closeModal(id) {
     document.getElementById(id).style.display = 'none';
 }
 
-/**
- * تحميل الصفوف للتسجيل (اختيار الصفوف للمدفوع)
- */
 async function loadGradesForRegister() {
     try {
         const response = await fetch('/api/grades');
@@ -1654,18 +1743,12 @@ async function loadGradesForRegister() {
     }
 }
 
-/**
- * تبديل إظهار اختيار الصفوف (عند اختيار خطة مدفوعة)
- */
 function toggleGradeSelection() {
     const plan = document.querySelector('input[name="regPlan"]:checked');
     const gradeDiv = document.getElementById('gradeSelection');
     gradeDiv.style.display = (plan && plan.value === 'paid') ? 'block' : 'none';
 }
 
-/**
- * تسجيل الدخول
- */
 async function loginUser() {
     const username = document.getElementById('loginUsername').value.trim();
     const password = document.getElementById('loginPassword').value.trim();
@@ -1703,9 +1786,6 @@ async function loginUser() {
     }
 }
 
-/**
- * تسجيل مستخدم جديد
- */
 async function registerUser() {
     const username = document.getElementById('regUsername').value.trim();
     const email = document.getElementById('regEmail').value.trim();
@@ -1784,7 +1864,7 @@ async function registerUser() {
 }
 
 // ================================================================
-// 13. البحث (Search)
+// 14. البحث (Search)
 // ================================================================
 
 if (DOM.searchInput) {
@@ -1832,12 +1912,6 @@ if (DOM.searchInput) {
     });
 }
 
-/**
- * التنقل إلى نتيجة البحث
- * @param {number} id
- * @param {string} type
- * @param {number} itemId
- */
 function navigateSearchResult(id, type, itemId) {
     DOM.searchResults.classList.remove('active');
     DOM.searchInput.value = '';
@@ -1849,10 +1923,9 @@ function navigateSearchResult(id, type, itemId) {
 }
 
 // ================================================================
-// 14. أحداث عامة (General Events)
+// 15. أحداث عامة (General Events)
 // ================================================================
 
-// زر العودة للأعلى
 window.addEventListener('scroll', () => {
     if (window.scrollY > 300) {
         DOM.backToTop.style.display = 'flex';
@@ -1861,12 +1934,10 @@ window.addEventListener('scroll', () => {
     }
 });
 
-// تبديل الشريط الجانبي (للجوال)
 if (DOM.sidebarToggle) {
     DOM.sidebarToggle.addEventListener('click', toggleSidebar);
 }
 
-// إغلاق الشريط عند تغيير حجم النافذة إلى شاشة كبيرة
 window.addEventListener('resize', () => {
     if (window.innerWidth > 768) {
         closeSidebar();
@@ -1874,17 +1945,11 @@ window.addEventListener('resize', () => {
 });
 
 // ================================================================
-// 15. بدء التطبيق (App Initialization)
+// 16. بدء التطبيق (App Initialization)
 // ================================================================
 
-/**
- * تهيئة التطبيق عند تحميل الصفحة
- */
 async function initApp() {
-    // التحقق من الجلسة الحالية
     await checkCurrentUser();
-    
-    // إذا لم يكن هناك مستخدم، عرض الصفحة العامة
     if (!AppState.currentUser) {
         navigateTo('home');
     } else {
@@ -1892,17 +1957,13 @@ async function initApp() {
     }
 }
 
-// بدء التطبيق عند تحميل DOM
 document.addEventListener('DOMContentLoaded', initApp);
 
 // ================================================================
-// 16. جعل الدوال عالمية (للاستخدام في HTML)
+// 17. جعل الدوال عالمية (للاستخدام في HTML)
 // ================================================================
 
-// التنقل
 window.navigateTo = navigateTo;
-
-// المصادقة
 window.showLoginModal = showLoginModal;
 window.showRegisterModal = showRegisterModal;
 window.switchToRegister = switchToRegister;
@@ -1912,21 +1973,15 @@ window.loginUser = loginUser;
 window.registerUser = registerUser;
 window.logout = logout;
 window.toggleGradeSelection = toggleGradeSelection;
-
-// المحتوى
 window.viewGradeContent = viewGradeContent;
 window.viewSubject = viewSubject;
 window.viewUnit = viewUnit;
 window.viewLesson = viewLesson;
 window.viewGradePublic = viewGradePublic;
-
-// الامتحانات
 window.startLessonExam = startLessonExam;
 window.startUnitExam = startUnitExam;
 window.selectExamAnswer = selectExamAnswer;
 window.nextExamQuestion = nextExamQuestion;
-
-// الإدارة - المستخدمين
 window.renderAdminUsers = renderAdminUsers;
 window.filterUsers = filterUsers;
 window.editUser = editUser;
@@ -1934,8 +1989,6 @@ window.toggleBanUser = toggleBanUser;
 window.deleteUser = deleteUser;
 window.showUpgradeUser = showUpgradeUser;
 window.setUserPlan = setUserPlan;
-
-// الإدارة - المحتوى
 window.renderAdminContent = renderAdminContent;
 window.showAddGrade = showAddGrade;
 window.editGrade = editGrade;
@@ -1950,6 +2003,4 @@ window.showAddLesson = showAddLesson;
 window.editLessonContent = editLessonContent;
 window.deleteLesson = deleteLesson;
 window.editUnitExam = editUnitExam;
-
-// البحث
 window.navigateSearchResult = navigateSearchResult;
