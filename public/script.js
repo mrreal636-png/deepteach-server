@@ -1,7 +1,7 @@
 /**
  * ================================================================
  * DeepTeach - JavaScript الرئيسي (Frontend Logic)
- * الإصدار 4.0.0 (المعدل النهائي)
+ * الإصدار 5.0.0 (المعدل النهائي مع طلبات الترقية)
  * ================================================================
  * 
  * 🧠  العمارة: Module Pattern مع إدارة حالة مركزية
@@ -10,6 +10,7 @@
  * 🎨  التفاعل: تحديث واجهة المستخدم ديناميكياً
  * 🔐  المصادقة: جلسات (Sessions) مع تذكر المستخدم
  * 🛡️  الأمان: التحقق من الصلاحيات قبل أي عملية إدارة
+ * ⬆️  طلبات الترقية: نظام متكامل لقبول/رفض طلبات المستخدمين
  * 
  * ================================================================
  */
@@ -82,21 +83,11 @@ const DOM = {
 // 3. دوال مساعدة (Utility Functions)
 // ================================================================
 
-/**
- * عرض رسالة للمستخدم
- * @param {string} message - نص الرسالة
- * @param {string} type - نوع الرسالة (error, success, info)
- */
 function showToast(message, type = 'info') {
     const prefix = type === 'error' ? '❌ ' : type === 'success' ? '✅ ' : 'ℹ️ ';
     alert(prefix + message);
 }
 
-/**
- * تنسيق التاريخ
- * @param {string|Date} date
- * @returns {string}
- */
 function formatDate(date) {
     if (!date) return '—';
     return new Date(date).toLocaleDateString('ar-EG', {
@@ -106,30 +97,15 @@ function formatDate(date) {
     });
 }
 
-/**
- * التحقق من صحة البريد الإلكتروني
- * @param {string} email
- * @returns {boolean}
- */
 function isValidEmail(email) {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
-/**
- * اختصار النص الطويل
- * @param {string} text
- * @param {number} maxLength
- * @returns {string}
- */
 function truncateText(text, maxLength = 50) {
     if (!text) return '';
     return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
 }
 
-/**
- * توليد معرف فريد مؤقت
- * @returns {number}
- */
 function generateTempId() {
     return Date.now() + Math.floor(Math.random() * 1000);
 }
@@ -138,11 +114,6 @@ function generateTempId() {
 // 4. إدارة المصادقة والصلاحيات (Auth & Permissions)
 // ================================================================
 
-/**
- * التحقق من أن المستخدم الحالي هو مدير
- * إذا لم يكن مديراً، يعرض رسالة خطأ ويعيد التوجيه
- * @returns {boolean} - true إذا كان مديراً، false إذا لم يكن
- */
 function ensureAdmin() {
     if (!AppState.currentUser) {
         showToast('يجب تسجيل الدخول أولاً', 'error');
@@ -157,23 +128,16 @@ function ensureAdmin() {
     return true;
 }
 
-/**
- * التحقق من صحة الجلسة الحالية
- * إذا كانت الجلسة غير صالحة، يقوم بتسجيل الخروج
- * @returns {Promise<boolean>}
- */
 async function checkSessionValidity() {
     try {
         const response = await fetch('/api/current-user');
         const data = await response.json();
         if (!data.user) {
-            // الجلسة غير صالحة
             AppState.currentUser = null;
             updateUIForUser();
             navigateTo('home');
             return false;
         }
-        // تحديث بيانات المستخدم إذا تغيرت
         AppState.currentUser = data.user;
         updateUIForUser();
         return true;
@@ -183,15 +147,8 @@ async function checkSessionValidity() {
     }
 }
 
-/**
- * معالجة أخطاء API المتعلقة بالمصادقة
- * @param {Response} response - كائن الاستجابة
- * @param {string} defaultMessage - رسالة الخطأ الافتراضية
- * @returns {Promise<boolean>} - true إذا كان الخطأ متعلقاً بالمصادقة
- */
 async function handleAuthError(response, defaultMessage = 'حدث خطأ') {
     if (response.status === 401 || response.status === 403) {
-        // جلسة منتهية أو غير مصرح
         showToast('انتهت صلاحية الجلسة. يرجى تسجيل الدخول مرة أخرى.', 'error');
         AppState.currentUser = null;
         updateUIForUser();
@@ -842,17 +799,14 @@ function finishExam() {
 // ================================================================
 
 async function renderAdminUsers() {
-    // التحقق من صلاحيات المدير
     if (!ensureAdmin()) return;
 
     try {
-        // التحقق من صحة الجلسة
         const isValid = await checkSessionValidity();
         if (!isValid) return;
 
         const response = await fetch('/api/admin/users');
         
-        // معالجة أخطاء المصادقة
         if (response.status === 401 || response.status === 403) {
             showToast('انتهت صلاحية الجلسة. يرجى تسجيل الدخول مرة أخرى.', 'error');
             logout();
@@ -894,7 +848,7 @@ async function renderAdminUsers() {
                                 <td>${u.phone || '—'}</td>
                                 <td>${u.plan === 'paid' ? '⭐ مدفوع' : '🆓 مجاني'}</td>
                                 <td>${u.selectedGrades && u.selectedGrades.length > 0 ? u.selectedGrades.join(', ') : '—'}</td>
-                                <td>${u.banned ? '🚫 محظور' : '✅ مفعل'}</td>
+                                <td>${u.banned ? '🚫 محظور' : (u.approved ? '✅ مفعل' : '⏳ معلق')}</td>
                                 <td style="display:flex; gap:4px; flex-wrap:wrap;">
                                     <button class="btn btn-sm" onclick="editUser('${u._id}')" title="تعديل">✏️</button>
                                     <button class="btn btn-sm ${u.banned ? 'btn-outline' : ''}" onclick="toggleBanUser('${u._id}')" title="${u.banned ? 'إلغاء الحظر' : 'حظر'}">${u.banned ? '🔓' : '🔒'}</button>
@@ -906,13 +860,148 @@ async function renderAdminUsers() {
                     </tbody>
                 </table>
             </div>
+            <!-- ===== قسم طلبات الترقية (جديد) ===== -->
+            <div id="upgradeRequestsSection" style="margin-top:30px;">
+                <h3 style="margin-bottom:15px;">⬆️ طلبات الترقية</h3>
+                <div id="upgradeRequestsContainer"></div>
+            </div>
         `;
+        
+        // تحميل طلبات الترقية
+        loadUpgradeRequests();
     } catch (error) {
         console.error('❌ خطأ في تحميل المستخدمين:', error);
         showToast('حدث خطأ في تحميل المستخدمين', 'error');
         DOM.mainContent.innerHTML = '<p style="color:var(--color-danger);">حدث خطأ في تحميل المستخدمين</p>';
     }
 }
+
+// ================================================================
+// 11.1 طلبات الترقية (جديد)
+// ================================================================
+
+async function loadUpgradeRequests() {
+    try {
+        const response = await fetch('/api/upgrade-requests');
+        if (response.status === 401 || response.status === 403) {
+            return;
+        }
+        const requests = await response.json();
+        const container = document.getElementById('upgradeRequestsContainer');
+        if (!container) return;
+
+        if (requests.length === 0) {
+            container.innerHTML = '<p style="color:var(--color-text-muted);">لا توجد طلبات ترقية</p>';
+            return;
+        }
+
+        container.innerHTML = `
+            <div class="overflow-x-auto">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>المستخدم</th>
+                            <th>الاسم الكامل</th>
+                            <th>الهاتف</th>
+                            <th>المدة</th>
+                            <th>الصفوف المختارة</th>
+                            <th>الحالة</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${requests.map(r => `
+                            <tr>
+                                <td><strong>${r.username}</strong></td>
+                                <td>${r.fullName || '—'}</td>
+                                <td>${r.phone || '—'}</td>
+                                <td>${r.duration || '—'}</td>
+                                <td>${r.selectedGrades && r.selectedGrades.length > 0 ? r.selectedGrades.join(', ') : '—'}</td>
+                                <td>${r.status === 'pending' ? '⏳ معلق' : r.status === 'approved' ? '✅ مقبول' : '❌ مرفوض'}</td>
+                                <td style="display:flex; gap:4px; flex-wrap:wrap;">
+                                    ${r.status === 'pending' ? `
+                                        <button class="btn btn-sm" onclick="approveUpgradeRequest('${r.username}')" title="قبول">✅ قبول</button>
+                                        <button class="btn btn-sm btn-danger" onclick="rejectUpgradeRequest('${r.username}')" title="رفض">❌ رفض</button>
+                                    ` : ''}
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
+    } catch (error) {
+        console.error('❌ خطأ في تحميل طلبات الترقية:', error);
+        const container = document.getElementById('upgradeRequestsContainer');
+        if (container) {
+            container.innerHTML = '<p style="color:var(--color-danger);">حدث خطأ في تحميل الطلبات</p>';
+        }
+    }
+}
+
+// ====== دوال قبول ورفض طلبات الترقية ======
+
+async function approveUpgradeRequest(username) {
+    if (!ensureAdmin()) return;
+    if (!confirm(`هل تريد الموافقة على طلب ترقية المستخدم ${username}؟`)) return;
+    
+    try {
+        const response = await fetch('/api/upgrade-request/approve', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username })
+        });
+        
+        if (response.status === 401 || response.status === 403) {
+            showToast('انتهت صلاحية الجلسة. يرجى تسجيل الدخول مرة أخرى.', 'error');
+            logout();
+            return;
+        }
+
+        const data = await response.json();
+        if (data.message) {
+            showToast(`✅ ${data.message}`, 'success');
+            renderAdminUsers();
+        } else {
+            showToast('❌ ' + (data.error || 'فشل الموافقة'), 'error');
+        }
+    } catch (error) {
+        console.error('❌ خطأ في الموافقة على الترقية:', error);
+        showToast('حدث خطأ في الاتصال', 'error');
+    }
+}
+
+async function rejectUpgradeRequest(username) {
+    if (!ensureAdmin()) return;
+    if (!confirm(`هل تريد رفض طلب ترقية المستخدم ${username}؟`)) return;
+    
+    try {
+        const response = await fetch(`/api/upgrade-request/${username}`, {
+            method: 'DELETE'
+        });
+        
+        if (response.status === 401 || response.status === 403) {
+            showToast('انتهت صلاحية الجلسة. يرجى تسجيل الدخول مرة أخرى.', 'error');
+            logout();
+            return;
+        }
+
+        const data = await response.json();
+        if (data.success) {
+            showToast('✅ تم رفض الطلب', 'success');
+            renderAdminUsers();
+        } else {
+            showToast('❌ ' + (data.error || 'فشل الرفض'), 'error');
+        }
+    } catch (error) {
+        console.error('❌ خطأ في رفض طلب الترقية:', error);
+        showToast('حدث خطأ في الاتصال', 'error');
+    }
+}
+
+// ================================================================
+// 11.2 دوال إدارة المستخدمين الأخرى
+// ================================================================
 
 function filterUsers() {
     const query = document.getElementById('userSearchInput')?.value?.toLowerCase() || '';
@@ -1217,7 +1306,9 @@ async function loadAdminContentTree() {
     }
 }
 
-// ====== دوال إدارة الصفوف ======
+// ================================================================
+// 13. دوال إدارة المحتوى (الصفوف، المواد، الوحدات، الدروس)
+// ================================================================
 
 async function showAddGrade() {
     if (!ensureAdmin()) return;
@@ -1694,7 +1785,7 @@ async function editUnitExam(gradeId, subjectId, unitId) {
 }
 
 // ================================================================
-// 13. تسجيل الدخول والتسجيل (Login & Register)
+// 14. تسجيل الدخول والتسجيل (Login & Register)
 // ================================================================
 
 function showLoginModal(message = '') {
@@ -1864,7 +1955,7 @@ async function registerUser() {
 }
 
 // ================================================================
-// 14. البحث (Search)
+// 15. البحث (Search)
 // ================================================================
 
 if (DOM.searchInput) {
@@ -1923,7 +2014,7 @@ function navigateSearchResult(id, type, itemId) {
 }
 
 // ================================================================
-// 15. أحداث عامة (General Events)
+// 16. أحداث عامة (General Events)
 // ================================================================
 
 window.addEventListener('scroll', () => {
@@ -1945,7 +2036,7 @@ window.addEventListener('resize', () => {
 });
 
 // ================================================================
-// 16. بدء التطبيق (App Initialization)
+// 17. بدء التطبيق (App Initialization)
 // ================================================================
 
 async function initApp() {
@@ -1960,7 +2051,7 @@ async function initApp() {
 document.addEventListener('DOMContentLoaded', initApp);
 
 // ================================================================
-// 17. جعل الدوال عالمية (للاستخدام في HTML)
+// 18. جعل الدوال عالمية (للاستخدام في HTML)
 // ================================================================
 
 window.navigateTo = navigateTo;
@@ -2004,3 +2095,6 @@ window.editLessonContent = editLessonContent;
 window.deleteLesson = deleteLesson;
 window.editUnitExam = editUnitExam;
 window.navigateSearchResult = navigateSearchResult;
+window.approveUpgradeRequest = approveUpgradeRequest;
+window.rejectUpgradeRequest = rejectUpgradeRequest;
+window.loadUpgradeRequests = loadUpgradeRequests;

@@ -8,6 +8,7 @@
  * 🔐  المصادقة: جلسات (Sessions) مع إدارة مستخدمين متكاملة
  * 📚  إدارة المحتوى: صفوف، مواد، وحدات، دروس، امتحانات
  * 👥  إدارة المستخدمين: صلاحيات، حظر، اشتراكات، ترقيات
+ * ⬆️  طلبات الترقية: نظام متكامل لقبول/رفض طلبات المستخدمين
  * 
  * ================================================================
  */
@@ -62,16 +63,15 @@ mongoose
 // 3. إعدادات Middleware
 // ================================================================
 
-// إعداد الجلسات مع تحسينات للأمان والموثوقية
 app.use(
     session({
         secret: SESSION_SECRET,
         resave: false,
         saveUninitialized: false,
         cookie: {
-            secure: false, // في Render (HTTP) يجب أن تكون false
+            secure: false,
             httpOnly: true,
-            maxAge: 1000 * 60 * 60 * 24 * 7, // 7 أيام
+            maxAge: 1000 * 60 * 60 * 24 * 7,
             sameSite: 'lax',
             path: '/',
         },
@@ -84,7 +84,6 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Middleware لتسجيل الطلبات
 app.use((req, res, next) => {
     const start = Date.now();
     res.on('finish', () => {
@@ -211,8 +210,20 @@ const UserSchema = new mongoose.Schema(
     }
 );
 
+// مخطط طلبات الترقية (جديد)
+const UpgradeRequestSchema = new mongoose.Schema({
+    username: { type: String, required: true },
+    fullName: { type: String, default: '' },
+    phone: { type: String, default: '' },
+    duration: { type: String, default: 'سنة دراسية' },
+    selectedGrades: { type: [Number], default: [] },
+    status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
+    createdAt: { type: Date, default: Date.now }
+});
+
 const User = mongoose.model('User', UserSchema);
 const Grade = mongoose.model('Grade', GradeSchema);
+const UpgradeRequest = mongoose.model('UpgradeRequest', UpgradeRequestSchema);
 
 // ================================================================
 // 5. دوال مساعدة
@@ -223,57 +234,23 @@ function getNextId(items) {
     return Math.max(...items.map(item => item.id || 0)) + 1;
 }
 
-/**
- * الحصول على المستخدم الحالي من الجلسة
- * @param {Object} req - كائن الطلب
- * @returns {Promise<Object|null>}
- */
 async function getCurrentUser(req) {
     if (!req.session.userId) return null;
     try {
-        const user = await User.findById(req.session.userId);
-        return user;
-    } catch (error) {
-        console.error('❌ خطأ في جلب المستخدم الحالي:', error);
+        return await User.findById(req.session.userId);
+    } catch {
         return null;
     }
 }
 
-/**
- * التحقق من أن المستخدم هو مدير
- * @param {Object} user - المستخدم
- * @returns {boolean}
- */
 function isAdmin(user) {
     return user && user.role === 'admin';
-}
-
-/**
- * التحقق من صلاحية الوصول إلى درس
- * @param {Object|null} user - المستخدم الحالي
- * @param {Object} lesson - الدرس المطلوب
- * @returns {boolean}
- */
-function canAccessLesson(user, lesson) {
-    if (!user) return false;
-    if (user.role === 'admin') return true;
-    if (lesson.free) return true;
-    if (user.plan === 'paid') {
-        if (user.subscriptionEnd && new Date() > new Date(user.subscriptionEnd)) {
-            return false;
-        }
-        return true;
-    }
-    return false;
 }
 
 // ================================================================
 // 6. دوال المصادقة (Middleware)
 // ================================================================
 
-/**
- * وسيط التحقق من أن المستخدم مسجل الدخول
- */
 async function requireAuth(req, res, next) {
     const user = await getCurrentUser(req);
     if (!user) {
@@ -287,9 +264,6 @@ async function requireAuth(req, res, next) {
     next();
 }
 
-/**
- * وسيط التحقق من أن المستخدم هو مدير
- */
 async function requireAdmin(req, res, next) {
     const user = await getCurrentUser(req);
     if (!user) {
@@ -314,9 +288,6 @@ async function requireAdmin(req, res, next) {
 // 7. مسارات API - المصادقة (Auth Routes)
 // ================================================================
 
-/**
- * POST /api/login - تسجيل الدخول
- */
 app.post('/api/login', async (req, res) => {
     try {
         const { username, password } = req.body;
@@ -360,7 +331,6 @@ app.post('/api/login', async (req, res) => {
             });
         }
 
-        // التحقق من انتهاء الاشتراك المدفوع
         if (user.plan === 'paid' && user.subscriptionEnd && new Date() > new Date(user.subscriptionEnd)) {
             user.plan = 'free';
             user.subscriptionEnd = null;
@@ -369,7 +339,6 @@ app.post('/api/login', async (req, res) => {
             console.log(`🔄 تم تحويل المستخدم ${user.username} إلى مجاني (انتهى الاشتراك)`);
         }
 
-        // حفظ الجلسة
         req.session.userId = user._id;
         req.session.username = user.username;
         req.session.role = user.role;
@@ -398,9 +367,6 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
-/**
- * POST /api/logout - تسجيل الخروج
- */
 app.post('/api/logout', (req, res) => {
     const username = req.session.username;
     req.session.destroy((err) => {
@@ -416,9 +382,6 @@ app.post('/api/logout', (req, res) => {
     });
 });
 
-/**
- * GET /api/current-user - الحصول على المستخدم الحالي
- */
 app.get('/api/current-user', async (req, res) => {
     try {
         const user = await getCurrentUser(req);
@@ -446,9 +409,6 @@ app.get('/api/current-user', async (req, res) => {
     }
 });
 
-/**
- * POST /api/register - تسجيل مستخدم جديد
- */
 app.post('/api/register', async (req, res) => {
     try {
         const { username, email, password, confirmPassword, phone, selectedGrades, plan } = req.body;
@@ -520,28 +480,121 @@ app.post('/api/register', async (req, res) => {
 });
 
 // ================================================================
-// 8. مسارات API - إدارة المستخدمين (للمدير فقط)
+// 8. مسارات API - طلبات الترقية (جديدة)
 // ================================================================
 
-/**
- * GET /api/admin/users - جلب جميع المستخدمين
- */
+// جلب جميع طلبات الترقية (للمدير فقط)
+app.get('/api/upgrade-requests', requireAdmin, async (req, res) => {
+    try {
+        const requests = await UpgradeRequest.find().sort({ createdAt: -1 });
+        res.json(requests);
+    } catch (error) {
+        console.error('❌ خطأ في جلب طلبات الترقية:', error);
+        res.status(500).json({ error: 'حدث خطأ في الخادم' });
+    }
+});
+
+// تقديم طلب ترقية (للمستخدم)
+app.post('/api/upgrade-request', async (req, res) => {
+    try {
+        const { username, fullName, phone, duration, selectedGrades } = req.body;
+        
+        // التحقق من وجود طلب معلق
+        const existing = await UpgradeRequest.findOne({ username, status: 'pending' });
+        if (existing) {
+            return res.status(400).json({ error: 'لديك طلب ترقية قيد الانتظار' });
+        }
+
+        const request = new UpgradeRequest({
+            username,
+            fullName: fullName || '',
+            phone: phone || '',
+            duration: duration || 'سنة دراسية',
+            selectedGrades: selectedGrades || [],
+            status: 'pending',
+            createdAt: new Date()
+        });
+        await request.save();
+        
+        console.log(`📨 طلب ترقية جديد من ${username}`);
+        res.json({ message: 'تم إرسال طلب الترقية بنجاح، بانتظار موافقة المدير' });
+    } catch (error) {
+        console.error('❌ خطأ في تقديم طلب الترقية:', error);
+        res.status(500).json({ error: 'حدث خطأ في الخادم' });
+    }
+});
+
+// الموافقة على طلب ترقية (للمدير فقط)
+app.put('/api/upgrade-request/approve', requireAdmin, async (req, res) => {
+    try {
+        const { username } = req.body;
+        const request = await UpgradeRequest.findOne({ username, status: 'pending' });
+        if (!request) {
+            return res.status(404).json({ error: 'لا يوجد طلب معلق لهذا المستخدم' });
+        }
+        
+        request.status = 'approved';
+        await request.save();
+
+        // تحديث بيانات المستخدم
+        const user = await User.findOne({ username });
+        if (user) {
+            user.plan = 'paid';
+            const now = new Date();
+            // تحديد المدة (افتراضي 12 شهر)
+            let months = 12;
+            if (request.duration) {
+                const match = request.duration.match(/\d+/);
+                if (match) months = parseInt(match[0]) || 12;
+            }
+            user.subscriptionEnd = new Date(now.setMonth(now.getMonth() + months));
+            // تعيين الصفوف المختارة من الطلب
+            if (request.selectedGrades && request.selectedGrades.length > 0) {
+                user.selectedGrades = request.selectedGrades;
+            }
+            await user.save();
+            console.log(`✅ تمت الموافقة على ترقية المستخدم ${username}`);
+        }
+
+        res.json({ message: `تمت الموافقة على ترقية المستخدم ${username} بنجاح` });
+    } catch (error) {
+        console.error('❌ خطأ في الموافقة على الترقية:', error);
+        res.status(500).json({ error: 'حدث خطأ في الخادم' });
+    }
+});
+
+// رفض طلب ترقية (للمدير فقط)
+app.delete('/api/upgrade-request/:username', requireAdmin, async (req, res) => {
+    try {
+        const result = await UpgradeRequest.deleteOne({ 
+            username: req.params.username, 
+            status: 'pending' 
+        });
+        if (result.deletedCount === 0) {
+            return res.status(404).json({ error: 'لا يوجد طلب معلق لهذا المستخدم' });
+        }
+        console.log(`❌ تم رفض طلب ترقية المستخدم ${req.params.username}`);
+        res.json({ success: true, message: 'تم رفض طلب الترقية' });
+    } catch (error) {
+        console.error('❌ خطأ في رفض طلب الترقية:', error);
+        res.status(500).json({ error: 'حدث خطأ في الخادم' });
+    }
+});
+
+// ================================================================
+// 9. مسارات API - إدارة المستخدمين (للمدير فقط)
+// ================================================================
+
 app.get('/api/admin/users', requireAdmin, async (req, res) => {
     try {
         const users = await User.find({ role: 'student' }).sort({ username: 1 });
         res.json(users);
     } catch (error) {
         console.error('❌ خطأ في جلب المستخدمين:', error);
-        res.status(500).json({ 
-            success: false,
-            error: 'حدث خطأ في الخادم' 
-        });
+        res.status(500).json({ error: 'حدث خطأ في الخادم' });
     }
 });
 
-/**
- * GET /api/admin/users/:id - جلب مستخدم محدد
- */
 app.get('/api/admin/users/:id', requireAdmin, async (req, res) => {
     try {
         const user = await User.findById(req.params.id);
@@ -554,9 +607,6 @@ app.get('/api/admin/users/:id', requireAdmin, async (req, res) => {
     }
 });
 
-/**
- * PUT /api/admin/users/:id - تحديث بيانات المستخدم
- */
 app.put('/api/admin/users/:id', requireAdmin, async (req, res) => {
     try {
         const { username, email, password, phone, plan, selectedGrades, subscriptionDuration, banned, approved } = req.body;
@@ -613,9 +663,6 @@ app.put('/api/admin/users/:id', requireAdmin, async (req, res) => {
     }
 });
 
-/**
- * PUT /api/admin/users/:id/ban - تبديل حالة الحظر
- */
 app.put('/api/admin/users/:id/ban', requireAdmin, async (req, res) => {
     try {
         const user = await User.findById(req.params.id);
@@ -631,9 +678,6 @@ app.put('/api/admin/users/:id/ban', requireAdmin, async (req, res) => {
     }
 });
 
-/**
- * DELETE /api/admin/users/:id - حذف المستخدم
- */
 app.delete('/api/admin/users/:id', requireAdmin, async (req, res) => {
     try {
         const user = await User.findById(req.params.id);
@@ -652,12 +696,9 @@ app.delete('/api/admin/users/:id', requireAdmin, async (req, res) => {
 });
 
 // ================================================================
-// 9. مسارات API - إدارة المحتوى (للمدير فقط)
+// 10. مسارات API - إدارة المحتوى
 // ================================================================
 
-/**
- * GET /api/grades - جلب جميع الصفوف (للجميع)
- */
 app.get('/api/grades', async (req, res) => {
     try {
         const grades = await Grade.find().sort({ id: 1 });
@@ -668,9 +709,6 @@ app.get('/api/grades', async (req, res) => {
     }
 });
 
-/**
- * GET /api/grades/:id - جلب صف محدد
- */
 app.get('/api/grades/:id', async (req, res) => {
     try {
         const grade = await Grade.findOne({ id: parseInt(req.params.id) });
@@ -684,7 +722,9 @@ app.get('/api/grades/:id', async (req, res) => {
 });
 
 /**
- * GET /api/grades/:id/content - جلب محتوى الصف (مع صلاحيات)
+ * 🎯 أهم تعديل: منطق عرض الصفوف والدروس
+ * - المستخدم المجاني: يرى جميع الصفوف، ولكن فقط الدروس المجانية.
+ * - المستخدم المدفوع: يرى جميع الصفوف، ولكن الدروس المدفوعة تظهر فقط في الصفوف التي اختارها المدير.
  */
 app.get('/api/grades/:id/content', async (req, res) => {
     try {
@@ -697,6 +737,7 @@ app.get('/api/grades/:id/content', async (req, res) => {
 
         const user = await getCurrentUser(req);
 
+        // إذا لم يكن المستخدم مسجلاً
         if (!user) {
             const publicData = {
                 id: grade.id,
@@ -719,9 +760,12 @@ app.get('/api/grades/:id/content', async (req, res) => {
             return res.json(publicData);
         }
 
-        const isAdminUser = user.role === 'admin';
-        const isPaidUser = user.plan === 'paid' && (!user.subscriptionEnd || new Date() <= new Date(user.subscriptionEnd));
-        const userInGrade = isAdminUser || user.selectedGrades.includes(grade.id) || user.plan === 'free';
+        // المستخدم مسجل
+        const isAdmin = user.role === 'admin';
+        const isPaid = user.plan === 'paid' && (!user.subscriptionEnd || new Date() <= new Date(user.subscriptionEnd));
+        
+        // التحقق من أن المستخدم مشترك في هذا الصف (للمدفوع فقط)
+        const userInGrade = isAdmin || user.selectedGrades.includes(grade.id) || user.plan === 'free';
 
         const contentData = {
             id: grade.id,
@@ -733,7 +777,10 @@ app.get('/api/grades/:id/content', async (req, res) => {
                     id: u.id,
                     name: u.name,
                     lessons: u.lessons.map((l) => {
-                        const canAccess = isAdminUser || l.free || (isPaidUser && userInGrade);
+                        // 🎯 المنطق الجديد:
+                        // - الدرس مجاني: يظهر للجميع (canAccess = true)
+                        // - الدرس مدفوع: يظهر فقط للمدفوعين المشتركين في الصف
+                        const canAccess = isAdmin || l.free || (isPaid && userInGrade);
                         return {
                             id: l.id,
                             title: l.title,
@@ -749,7 +796,7 @@ app.get('/api/grades/:id/content', async (req, res) => {
                                 : null,
                         };
                     }),
-                    exam: isAdminUser || (isPaidUser && userInGrade) ? u.exam : null,
+                    exam: isAdmin || (isPaid && userInGrade) ? u.exam : null,
                 })),
             })),
         };
@@ -762,7 +809,7 @@ app.get('/api/grades/:id/content', async (req, res) => {
 });
 
 // ================================================================
-// 10. مسارات API - إدارة الصفوف (للمدير فقط)
+// 11. مسارات API - إدارة الصفوف (للمدير فقط)
 // ================================================================
 
 app.post('/api/admin/grades', requireAdmin, async (req, res) => {
@@ -820,7 +867,7 @@ app.delete('/api/admin/grades/:id', requireAdmin, async (req, res) => {
 });
 
 // ================================================================
-// 11. مسارات API - إدارة المواد (للمدير فقط)
+// 12. مسارات API - إدارة المواد (للمدير فقط)
 // ================================================================
 
 app.post('/api/admin/grades/:gradeId/subjects', requireAdmin, async (req, res) => {
@@ -896,7 +943,7 @@ app.delete('/api/admin/grades/:gradeId/subjects/:subjectId', requireAdmin, async
 });
 
 // ================================================================
-// 12. مسارات API - إدارة الوحدات (للمدير فقط)
+// 13. مسارات API - إدارة الوحدات (للمدير فقط)
 // ================================================================
 
 app.post('/api/admin/grades/:gradeId/subjects/:subjectId/units', requireAdmin, async (req, res) => {
@@ -987,7 +1034,7 @@ app.delete('/api/admin/grades/:gradeId/subjects/:subjectId/units/:unitId', requi
 });
 
 // ================================================================
-// 13. مسارات API - إدارة الدروس (للمدير فقط)
+// 14. مسارات API - إدارة الدروس (للمدير فقط)
 // ================================================================
 
 app.post('/api/admin/grades/:gradeId/subjects/:subjectId/units/:unitId/lessons', requireAdmin, async (req, res) => {
@@ -1108,7 +1155,7 @@ app.delete('/api/admin/grades/:gradeId/subjects/:subjectId/units/:unitId/lessons
 });
 
 // ================================================================
-// 14. مسارات API - امتحان الوحدة (للمدير فقط)
+// 15. مسارات API - امتحان الوحدة (للمدير فقط)
 // ================================================================
 
 app.put('/api/admin/grades/:gradeId/subjects/:subjectId/units/:unitId/exam', requireAdmin, async (req, res) => {
@@ -1141,14 +1188,13 @@ app.put('/api/admin/grades/:gradeId/subjects/:subjectId/units/:unitId/exam', req
 });
 
 // ================================================================
-// 15. تهيئة قاعدة البيانات
+// 16. تهيئة قاعدة البيانات
 // ================================================================
 
 async function initDatabase() {
     try {
         const ADMIN_PASSWORD = 'waseemo123janaloveu';
 
-        // ===== البحث عن حساب admin =====
         let admin = await User.findOne({ username: 'admin' });
 
         if (!admin) {
@@ -1185,7 +1231,7 @@ async function initDatabase() {
             }
         }
 
-        // ===== إنشاء حساب admin2 =====
+        // إنشاء حساب admin2 (احتياطي)
         const admin2 = await User.findOne({ username: 'admin2' });
         if (!admin2) {
             await new User({
@@ -1202,7 +1248,7 @@ async function initDatabase() {
             console.log('✅ تم إنشاء حساب admin إضافي (admin2)');
         }
 
-        // ===== إنشاء 12 صفاً دراسياً =====
+        // إنشاء 12 صفاً دراسياً
         const gradesCount = await Grade.countDocuments();
         if (gradesCount === 0) {
             const gradeNames = [
@@ -1239,7 +1285,7 @@ async function initDatabase() {
 }
 
 // ================================================================
-// 16. بدء تشغيل الخادم
+// 17. بدء تشغيل الخادم
 // ================================================================
 
 function startServer() {
@@ -1254,7 +1300,7 @@ function startServer() {
 }
 
 // ================================================================
-// 17. معالجة المسارات غير الموجودة (404)
+// 18. معالجة المسارات غير الموجودة (404)
 // ================================================================
 
 app.use((req, res) => {
@@ -1269,7 +1315,7 @@ app.use((req, res) => {
 });
 
 // ================================================================
-// 18. معالجة الأخطاء العامة
+// 19. معالجة الأخطاء العامة
 // ================================================================
 
 app.use((err, req, res, next) => {
@@ -1282,7 +1328,7 @@ app.use((err, req, res, next) => {
 });
 
 // ================================================================
-// 19. تصدير التطبيق
+// 20. تصدير التطبيق
 // ================================================================
 
 module.exports = app;
