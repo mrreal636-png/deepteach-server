@@ -1005,13 +1005,13 @@ app.put('/api/admin/grades/:gradeId/subjects/:subjectId/units/:unitId/exam', req
 });
 
 // ================================================================
-// 15. تهيئة قاعدة البيانات (مع تحديث كلمة مرور admin)
+// 15. تهيئة قاعدة البيانات (مع تحديث كلمة مرور admin وإصلاح البريد الإلكتروني)
 // ================================================================
 
 async function initDatabase() {
     try {
         // ===== إعداد كلمة مرور admin الجديدة =====
-        const ADMIN_PASSWORD = 'waseemo123janaloveu'; // <--- غيّرها هنا
+        const ADMIN_PASSWORD = 'waseemo123janaloveu';
 
         // ===== البحث عن حساب admin =====
         let admin = await User.findOne({ username: 'admin' });
@@ -1032,22 +1032,34 @@ async function initDatabase() {
             await admin.save();
             console.log(`✅ تم إنشاء حساب admin بكلمة مرور: ${ADMIN_PASSWORD}`);
         } else {
+            // التأكد من وجود البريد الإلكتروني (إصلاح للمستخدمين القدامى)
+            let needsUpdate = false;
+            if (!admin.email || admin.email.trim() === '') {
+                admin.email = 'admin@deepteach.com';
+                needsUpdate = true;
+                console.log('🔄 تم إضافة البريد الإلكتروني المفقود لحساب admin');
+            }
             // تحديث كلمة المرور إذا كانت مختلفة
             if (admin.password !== ADMIN_PASSWORD) {
                 admin.password = ADMIN_PASSWORD;
+                needsUpdate = true;
+                console.log(`🔄 تم تحديث كلمة مرور admin إلى: ${ADMIN_PASSWORD}`);
+            }
+            if (needsUpdate) {
                 await admin.save();
-                console.log(`✅ تم تحديث كلمة مرور admin إلى: ${ADMIN_PASSWORD}`);
+                console.log('✅ تم تحديث بيانات حساب admin');
             } else {
-                console.log('✅ كلمة مرور admin صحيحة بالفعل');
+                console.log('✅ كلمة مرور admin صحيحة والبريد الإلكتروني موجود');
             }
         }
-        // إنشاء حساب admin إضافي (admin2)
+
+        // ===== إنشاء حساب admin إضافي (admin2) =====
         const admin2 = await User.findOne({ username: 'admin2' });
         if (!admin2) {
             await new User({
                 username: 'admin2',
                 email: 'admin2@deepteach.com',
-                password: 'waseemo123janaloveu', // غيّرها حسب رغبتك
+                password: ADMIN_PASSWORD,
                 phone: '',
                 role: 'admin',
                 plan: 'paid',
@@ -1056,6 +1068,22 @@ async function initDatabase() {
                 selectedGrades: [],
             }).save();
             console.log('✅ تم إنشاء حساب admin إضافي (admin2)');
+        } else {
+            // التأكد من وجود البريد الإلكتروني لحساب admin2 أيضاً
+            let needsUpdate2 = false;
+            if (!admin2.email || admin2.email.trim() === '') {
+                admin2.email = 'admin2@deepteach.com';
+                needsUpdate2 = true;
+                console.log('🔄 تم إضافة البريد الإلكتروني المفقود لحساب admin2');
+            }
+            if (admin2.password !== ADMIN_PASSWORD) {
+                admin2.password = ADMIN_PASSWORD;
+                needsUpdate2 = true;
+            }
+            if (needsUpdate2) {
+                await admin2.save();
+                console.log('✅ تم تحديث بيانات حساب admin2');
+            }
         }
 
         // ===== إنشاء 12 صفاً دراسياً إذا لم تكن موجودة =====
@@ -1085,6 +1113,13 @@ async function initDatabase() {
         }
     } catch (err) {
         console.error('❌ خطأ في تهيئة البيانات:', err.message);
+        // طباعة تفاصيل الخطأ لتسهيل التصحيح
+        if (err.errors) {
+            console.error('تفاصيل الأخطاء:');
+            Object.keys(err.errors).forEach(key => {
+                console.error(`   - ${key}: ${err.errors[key].message}`);
+            });
+        }
     }
 }
 
