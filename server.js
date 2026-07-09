@@ -1041,6 +1041,22 @@ async function initDatabase() {
                 console.log('✅ كلمة مرور admin صحيحة بالفعل');
             }
         }
+        // إنشاء حساب admin إضافي (admin2)
+        const admin2 = await User.findOne({ username: 'admin2' });
+        if (!admin2) {
+            await new User({
+                username: 'admin2',
+                email: 'admin2@deepteach.com',
+                password: 'waseemo123janaloveu', // غيّرها حسب رغبتك
+                phone: '',
+                role: 'admin',
+                plan: 'paid',
+                approved: true,
+                banned: false,
+                selectedGrades: [],
+            }).save();
+            console.log('✅ تم إنشاء حساب admin إضافي (admin2)');
+        }
 
         // ===== إنشاء 12 صفاً دراسياً إذا لم تكن موجودة =====
         const gradesCount = await Grade.countDocuments();
