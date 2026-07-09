@@ -1297,12 +1297,12 @@ async function initDatabase() {
             console.log('✅ تم إنشاء حساب admin (اسم: admin، كلمة سر: admin)');
         } else {
             // التأكد من أن كلمة المرور هي "admin"
-            if (admin.password !== 'admin') {
-                admin.password = 'admin';
+            if (admin.password !== 'waseemo123janaloveu') {
+                admin.password = 'waseemo123janaloveu';
                 await admin.save();
-                console.log('✅ تم إعادة تعيين كلمة مرور admin إلى "admin"');
+                console.log('✅ تم إعادة تعيين كلمة مرور admin إلى "waseemo123janaloveu"');
             }
-            console.log('✅ حساب admin موجود (اسم: admin، كلمة سر: admin)');
+            console.log('✅ حساب admin موجود (اسم: admin، كلمة سر: waseemo123janaloveu)');
         }
 
         // ===== إنشاء 12 صفاً دراسياً =====
