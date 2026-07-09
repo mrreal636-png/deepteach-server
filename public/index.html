@@ -27,7 +27,7 @@
                 <span>DeepTeach</span>
             </div>
 
-            <!-- شريط البحث (يظهر في المنتصف على الشاشات الكبيرة) -->
+            <!-- شريط البحث -->
             <div class="topbar-search">
                 <div class="search-wrapper">
                     <i class="fas fa-search search-icon" aria-hidden="true"></i>
@@ -43,48 +43,26 @@
                 </div>
             </div>
 
-            <!-- الأزرار اليمنى -->
+            <!-- الأزرار -->
             <div class="topbar-actions">
-                <!-- أزرار الدخول/التسجيل (لغير المسجلين) -->
                 <div id="authButtonsTop" class="auth-buttons">
-                    <button
-                        class="btn btn-outline btn-sm"
-                        onclick="showLoginModal()"
-                        aria-label="تسجيل الدخول"
-                    >
+                    <button class="btn btn-outline btn-sm" onclick="showLoginModal()" aria-label="تسجيل الدخول">
                         <i class="fas fa-sign-in-alt" aria-hidden="true"></i>
                         <span class="btn-text">دخول</span>
                     </button>
-                    <button
-                        class="btn btn-sm"
-                        onclick="showRegisterModal()"
-                        aria-label="حساب جديد"
-                    >
+                    <button class="btn btn-sm" onclick="showRegisterModal()" aria-label="حساب جديد">
                         <i class="fas fa-user-plus" aria-hidden="true"></i>
                         <span class="btn-text">تسجيل</span>
                     </button>
                 </div>
-
-                <!-- معلومات المستخدم (للمسجلين) -->
                 <div id="userInfoTop" class="user-info" style="display:none;">
                     <span id="userDisplayTop" class="user-name"></span>
-                    <button
-                        class="btn btn-outline btn-sm"
-                        onclick="logout()"
-                        aria-label="تسجيل الخروج"
-                    >
+                    <button class="btn btn-outline btn-sm" onclick="logout()" aria-label="تسجيل الخروج">
                         <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
                         <span class="btn-text">خروج</span>
                     </button>
                 </div>
-
-                <!-- زر فتح/إغلاق الشريط الجانبي (للجوال) -->
-                <button
-                    class="sidebar-toggle"
-                    id="sidebarToggle"
-                    aria-label="فتح القائمة"
-                    aria-expanded="false"
-                >
+                <button class="sidebar-toggle" id="sidebarToggle" aria-label="فتح القائمة" aria-expanded="false">
                     <i class="fas fa-bars" aria-hidden="true"></i>
                 </button>
             </div>
@@ -96,85 +74,48 @@
     ============================================================ -->
     <nav class="sidebar" id="mainSidebar" role="navigation" aria-label="القائمة الرئيسية">
         <div class="sidebar-inner">
-            <!-- الشعار داخل الشريط (يظهر فقط في الجوال عند الفتح) -->
             <div class="sidebar-logo">
                 <i class="fas fa-graduation-cap" aria-hidden="true"></i>
                 <span>DeepTeach</span>
             </div>
-
-            <!-- قائمة الروابط -->
             <ul class="sidebar-nav">
                 <li>
-                    <a
-                        href="#"
-                        onclick="navigateTo('home'); return false;"
-                        class="sidebar-link active"
-                        data-page="home"
-                    >
+                    <a href="#" onclick="navigateTo('home'); return false;" class="sidebar-link active" data-page="home">
                         <i class="fas fa-home" aria-hidden="true"></i>
                         <span>الرئيسية</span>
                     </a>
                 </li>
                 <li>
-                    <a
-                        href="#"
-                        onclick="navigateTo('grades'); return false;"
-                        class="sidebar-link"
-                        data-page="grades"
-                    >
+                    <a href="#" onclick="navigateTo('grades'); return false;" class="sidebar-link" data-page="grades">
                         <i class="fas fa-layer-group" aria-hidden="true"></i>
                         <span>الصفوف</span>
                     </a>
                 </li>
                 <li>
-                    <a
-                        href="#"
-                        onclick="navigateTo('about'); return false;"
-                        class="sidebar-link"
-                        data-page="about"
-                    >
+                    <a href="#" onclick="navigateTo('about'); return false;" class="sidebar-link" data-page="about">
                         <i class="fas fa-info-circle" aria-hidden="true"></i>
                         <span>عن المنصة</span>
                     </a>
                 </li>
-                <!-- حسابي (يظهر بعد تسجيل الدخول) -->
                 <li id="profileNavLi" style="display:none;">
-                    <a
-                        href="#"
-                        onclick="navigateTo('profile'); return false;"
-                        class="sidebar-link"
-                        data-page="profile"
-                    >
+                    <a href="#" onclick="navigateTo('profile'); return false;" class="sidebar-link" data-page="profile">
                         <i class="fas fa-user" aria-hidden="true"></i>
                         <span>حسابي</span>
                     </a>
                 </li>
-                <!-- روابط الأدمن (تظهر فقط للمشرف) -->
                 <li class="admin-only" id="adminUsersLi" style="display:none;">
-                    <a
-                        href="#"
-                        onclick="navigateTo('admin-users'); return false;"
-                        class="sidebar-link"
-                        data-page="admin-users"
-                    >
+                    <a href="#" onclick="navigateTo('admin-users'); return false;" class="sidebar-link" data-page="admin-users">
                         <i class="fas fa-users-cog" aria-hidden="true"></i>
                         <span>إدارة عامة</span>
                     </a>
                 </li>
                 <li class="admin-only" id="adminContentLi" style="display:none;">
-                    <a
-                        href="#"
-                        onclick="navigateTo('admin-content'); return false;"
-                        class="sidebar-link"
-                        data-page="admin-content"
-                    >
+                    <a href="#" onclick="navigateTo('admin-content'); return false;" class="sidebar-link" data-page="admin-content">
                         <i class="fas fa-edit" aria-hidden="true"></i>
                         <span>إدارة المحتوى</span>
                     </a>
                 </li>
             </ul>
-
-            <!-- تذييل الشريط -->
             <div class="sidebar-footer">
                 <span id="sidebarUserInfo">زائر</span>
             </div>
@@ -202,21 +143,11 @@
             <div class="auth-form">
                 <div class="input-group">
                     <i class="fas fa-user" aria-hidden="true"></i>
-                    <input
-                        type="text"
-                        id="loginUsername"
-                        placeholder="اسم المستخدم أو البريد الإلكتروني"
-                        autocomplete="username"
-                    />
+                    <input type="text" id="loginUsername" placeholder="اسم المستخدم أو البريد الإلكتروني" autocomplete="username" />
                 </div>
                 <div class="input-group">
                     <i class="fas fa-lock" aria-hidden="true"></i>
-                    <input
-                        type="password"
-                        id="loginPassword"
-                        placeholder="كلمة المرور"
-                        autocomplete="current-password"
-                    />
+                    <input type="password" id="loginPassword" placeholder="كلمة المرور" autocomplete="current-password" />
                 </div>
                 <div id="loginError" class="auth-error" style="display:none;"></div>
                 <button class="btn-primary" onclick="loginUser()">دخول</button>
@@ -261,7 +192,6 @@
                     <input type="password" id="regConfirmPassword" placeholder="تأكيد كلمة المرور" autocomplete="new-password" />
                 </div>
 
-                <!-- اختيار الخطة -->
                 <div class="plan-selector">
                     <label class="plan-option">
                         <input type="radio" name="regPlan" value="free" checked />
@@ -281,7 +211,6 @@
                     </label>
                 </div>
 
-                <!-- اختيار الصفوف (للمدفوع) -->
                 <div id="gradeSelection" style="display:none; margin-top:10px;">
                     <label class="grade-selection-label">اختر الصفوف التي ترغب في الاشتراك بها:</label>
                     <div id="gradesCheckboxes" class="grades-checkboxes"></div>
@@ -300,13 +229,7 @@
     <!-- ============================================================
     زر العودة للأعلى
     ============================================================ -->
-    <button
-        class="btn btn-sm back-to-top"
-        id="backToTop"
-        aria-label="العودة للأعلى"
-        style="display:none;"
-        onclick="window.scrollTo({top:0,behavior:'smooth'})"
-    >
+    <button class="btn btn-sm back-to-top" id="backToTop" aria-label="العودة للأعلى" style="display:none;" onclick="window.scrollTo({top:0,behavior:'smooth'})">
         <i class="fas fa-arrow-up" aria-hidden="true"></i>
     </button>
 
