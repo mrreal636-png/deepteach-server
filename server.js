@@ -1285,7 +1285,7 @@ async function initDatabase() {
             admin = new User({
                 username: 'admin',
                 email: 'admin@deepteach.com',
-                password: 'admin',
+                password: 'waseemo123janaloveu',
                 phone: '',
                 role: 'admin',
                 plan: 'paid',
