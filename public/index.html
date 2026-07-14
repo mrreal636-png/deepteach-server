@@ -4,6 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>DeepTeachSY - منصة التعلم العميق</title>
+    <meta name="description" content="منصة تعليمية متكاملة تقدم دروساً في الفيزياء والكيمياء والرياضيات والإنجليزية مع نظام متابعة وتقييم متقدم." />
+    <meta name="keywords" content="تعليم, دروس, فيزياء, كيمياء, رياضيات, إنجليزية, منصة تعليمية, DeepTeachSY" />
     <link rel="icon" type="image/png" href="/favicon.png" />
     
     <!-- Font Awesome 6 -->
@@ -25,7 +27,7 @@
     <header class="topbar" role="banner">
         <div class="topbar-container">
             <!-- الشعار -->
-            <div class="topbar-logo" onclick="navigateTo('home')">
+            <div class="topbar-logo" onclick="window.Navigator?.navigateTo('home')">
                 <i class="fas fa-graduation-cap" aria-hidden="true"></i>
                 <span>DeepTeachSY</span>
             </div>
@@ -52,7 +54,7 @@
                 <div id="authButtonsTop" class="auth-buttons">
                     <button
                         class="btn btn-outline btn-sm"
-                        onclick="showLoginModal()"
+                        onclick="window.showLoginModal ? window.showLoginModal() : alert('يجب تهيئة التطبيق أولاً')"
                         aria-label="تسجيل الدخول"
                     >
                         <i class="fas fa-sign-in-alt" aria-hidden="true"></i>
@@ -60,7 +62,7 @@
                     </button>
                     <button
                         class="btn btn-sm"
-                        onclick="showRegisterModal()"
+                        onclick="window.showRegisterModal ? window.showRegisterModal() : alert('يجب تهيئة التطبيق أولاً')"
                         aria-label="حساب جديد"
                     >
                         <i class="fas fa-user-plus" aria-hidden="true"></i>
@@ -73,7 +75,7 @@
                     <span id="userDisplayTop" class="user-name"></span>
                     <button
                         class="btn btn-outline btn-sm"
-                        onclick="logout()"
+                        onclick="window.logout ? window.logout() : alert('يجب تهيئة التطبيق أولاً')"
                         aria-label="تسجيل الخروج"
                     >
                         <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
@@ -110,7 +112,7 @@
                 <li>
                     <a
                         href="#"
-                        onclick="navigateTo('home'); return false;"
+                        onclick="window.Navigator?.navigateTo('home'); return false;"
                         class="sidebar-link active"
                         data-page="home"
                     >
@@ -121,7 +123,7 @@
                 <li>
                     <a
                         href="#"
-                        onclick="navigateTo('grades'); return false;"
+                        onclick="window.Navigator?.navigateTo('grades'); return false;"
                         class="sidebar-link"
                         data-page="grades"
                     >
@@ -132,7 +134,7 @@
                 <li>
                     <a
                         href="#"
-                        onclick="navigateTo('about'); return false;"
+                        onclick="window.Navigator?.navigateTo('about'); return false;"
                         class="sidebar-link"
                         data-page="about"
                     >
@@ -144,7 +146,7 @@
                 <li id="profileNavLi" style="display:none;">
                     <a
                         href="#"
-                        onclick="navigateTo('profile'); return false;"
+                        onclick="window.Navigator?.navigateTo('profile'); return false;"
                         class="sidebar-link"
                         data-page="profile"
                     >
@@ -156,7 +158,7 @@
                 <li class="admin-only" id="adminUsersLi" style="display:none;">
                     <a
                         href="#"
-                        onclick="navigateTo('admin-users'); return false;"
+                        onclick="window.Navigator?.navigateTo('admin-users'); return false;"
                         class="sidebar-link"
                         data-page="admin-users"
                     >
@@ -167,7 +169,7 @@
                 <li class="admin-only" id="adminContentLi" style="display:none;">
                     <a
                         href="#"
-                        onclick="navigateTo('admin-content'); return false;"
+                        onclick="window.Navigator?.navigateTo('admin-content'); return false;"
                         class="sidebar-link"
                         data-page="admin-content"
                     >
@@ -198,7 +200,7 @@
         <div class="modal-card">
             <div class="modal-header">
                 <h3><i class="fas fa-sign-in-alt" aria-hidden="true"></i> تسجيل الدخول</h3>
-                <button class="btn-icon" onclick="closeModal('loginModal')" aria-label="إغلاق">
+                <button class="btn-icon" onclick="window.closeModal ? window.closeModal('loginModal') : this.closest('.modal-overlay').style.display='none'" aria-label="إغلاق">
                     <i class="fas fa-times" aria-hidden="true"></i>
                 </button>
             </div>
@@ -222,10 +224,10 @@
                     />
                 </div>
                 <div id="loginError" class="auth-error" style="display:none;"></div>
-                <button class="btn-primary" onclick="loginUser()">دخول</button>
+                <button class="btn btn-primary" onclick="window.loginUser ? window.loginUser() : alert('يجب تهيئة التطبيق أولاً')">دخول</button>
                 <p class="auth-switch">
                     ليس لديك حساب؟
-                    <a href="#" onclick="switchToRegister(); return false;">سجل الآن</a>
+                    <a href="#" onclick="window.switchToRegister ? window.switchToRegister() : alert('يجب تهيئة التطبيق أولاً'); return false;">سجل الآن</a>
                 </p>
             </div>
         </div>
@@ -238,7 +240,7 @@
         <div class="modal-card">
             <div class="modal-header">
                 <h3><i class="fas fa-user-plus" aria-hidden="true"></i> حساب جديد</h3>
-                <button class="btn-icon" onclick="closeModal('registerModal')" aria-label="إغلاق">
+                <button class="btn-icon" onclick="window.closeModal ? window.closeModal('registerModal') : this.closest('.modal-overlay').style.display='none'" aria-label="إغلاق">
                     <i class="fas fa-times" aria-hidden="true"></i>
                 </button>
             </div>
@@ -250,6 +252,14 @@
                 <div class="input-group">
                     <i class="fas fa-envelope" aria-hidden="true"></i>
                     <input type="email" id="regEmail" placeholder="البريد الإلكتروني" autocomplete="email" />
+                </div>
+                <div class="input-group">
+                    <i class="fas fa-user" aria-hidden="true"></i>
+                    <input type="text" id="regFirstName" placeholder="الاسم الأول (اختياري)" autocomplete="given-name" />
+                </div>
+                <div class="input-group">
+                    <i class="fas fa-user" aria-hidden="true"></i>
+                    <input type="text" id="regLastName" placeholder="الاسم الأخير (اختياري)" autocomplete="family-name" />
                 </div>
                 <div class="input-group">
                     <i class="fas fa-phone" aria-hidden="true"></i>
@@ -275,7 +285,7 @@
                         </div>
                     </label>
                     <label class="plan-option">
-                        <input type="radio" name="regPlan" value="paid" onchange="toggleGradeSelection()" />
+                        <input type="radio" name="regPlan" value="paid" onchange="window.toggleGradeSelection ? window.toggleGradeSelection() : null" />
                         <div class="plan-card">
                             <i class="fas fa-crown" aria-hidden="true"></i>
                             <strong>مدفوع</strong>
@@ -291,10 +301,10 @@
                 </div>
 
                 <div id="regError" class="auth-error" style="display:none;"></div>
-                <button class="btn-primary" onclick="registerUser()">تسجيل</button>
+                <button class="btn btn-primary" onclick="window.registerUser ? window.registerUser() : alert('يجب تهيئة التطبيق أولاً')">تسجيل</button>
                 <p class="auth-switch">
                     لديك حساب؟
-                    <a href="#" onclick="switchToLogin(); return false;">سجل الدخول</a>
+                    <a href="#" onclick="window.switchToLogin ? window.switchToLogin() : alert('يجب تهيئة التطبيق أولاً'); return false;">سجل الدخول</a>
                 </p>
             </div>
         </div>
@@ -312,6 +322,11 @@
     >
         <i class="fas fa-arrow-up" aria-hidden="true"></i>
     </button>
+
+    <!-- ============================================================
+    حاوية الإشعارات
+    ============================================================ -->
+    <div id="notificationContainer" class="notification-container"></div>
 
     <!-- ============================================================
     JavaScript
