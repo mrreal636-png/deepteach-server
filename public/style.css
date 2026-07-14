@@ -1,20 +1,20 @@
 /**
  * ================================================================
- * DeepTeach - التصميم الرئيسي (Main Stylesheet)
- * الإصدار 4.0.0 (المعدل النهائي)
+ * DeepTeachSY - التصميم الرئيسي (Main Stylesheet)
+ * الإصدار 3.0.0 (النهائي الاحترافي)
  * ================================================================
  * 
- * 🎨  نظام الألوان: بنفسجي-أزرق-ذهبي (Dark Theme)
- * 📱  التصميم: متجاوب بالكامل (Mobile First)
- * 🧩  المكونات: شريط علوي، شريط جانبي، كروت، نماذج، جداول
- * ✨  التأثيرات: زجاجية (Glassmorphism)، تدرجات، ظلال، انتقالات
- * 🛡️  تحسينات: جداول الإدارة، أزرار الإجراءات، تجاوب محسّن
+ * 🎨  نظام الألوان: بنفسجي-أزرق-ذهبي مع تدرجات حديثة
+ * 📱  التصميم: متجاوب بالكامل (Mobile First) مع دعم جميع الشاشات
+ * 🧩  المكونات: شريط علوي، شريط جانبي، كروت، نماذج، جداول، صفحات متكاملة
+ * ✨  التأثيرات: Glassmorphism، تدرجات متحركة، ظلال، انتقالات سلسة
+ * 🎭  الأيقونات: Font Awesome 6 مع تنسيقات مخصصة
  * 
  * ================================================================
  */
 
 /* ================================================================
-   1. المتغيرات (CSS Variables)
+   1. المتغيرات (CSS Variables) - نظام ألوان متكامل
    ================================================================ */
 :root {
     /* === الألوان الأساسية === */
@@ -29,43 +29,53 @@
     --color-danger: #ef4444;
     --color-warning: #f59e0b;
     --color-info: #3b82f6;
+    --color-white: #ffffff;
+    --color-black: #0a0a1a;
 
     /* === خلفيات === */
-    --color-bg-start: #0f0c29;
+    --color-bg-start: #0a0a1a;
     --color-bg-mid: #1a1747;
     --color-bg-end: #24243e;
-    --color-glass-bg: rgba(255, 255, 255, 0.07);
-    --color-glass-border: rgba(255, 255, 255, 0.12);
+    --color-glass-bg: rgba(255, 255, 255, 0.06);
+    --color-glass-border: rgba(255, 255, 255, 0.1);
     --color-glass-hover: rgba(108, 99, 255, 0.15);
+    --color-card-bg: rgba(255, 255, 255, 0.04);
 
     /* === النصوص === */
     --color-text-primary: #f1f5f9;
     --color-text-secondary: #94a3b8;
     --color-text-muted: #64748b;
     --color-text-inverse: #1a1a2e;
+    --color-text-gold: #f59e0b;
 
     /* === الأبعاد === */
     --radius: 16px;
     --radius-sm: 10px;
     --radius-xs: 6px;
+    --radius-xl: 24px;
     --shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
     --shadow-sm: 0 4px 16px rgba(0, 0, 0, 0.3);
     --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.5);
+    --shadow-glow: 0 0 30px rgba(108, 99, 255, 0.15);
     --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-slow: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 
     /* === الأبعاد الهيكلية === */
-    --topbar-height: 64px;
-    --sidebar-width: 240px;
+    --topbar-height: 68px;
+    --sidebar-width: 250px;
+    --sidebar-collapsed: 0px;
+    --max-width: 1400px;
 
     /* === الخطوط === */
     --font-family: 'Cairo', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    --font-size-sm: 0.75rem;
+    --font-size-xs: 0.7rem;
+    --font-size-sm: 0.8rem;
     --font-size-base: 0.95rem;
     --font-size-lg: 1.1rem;
-    --font-size-xl: 1.4rem;
-    --font-size-2xl: 2rem;
-    --font-size-3xl: 2.6rem;
+    --font-size-xl: 1.3rem;
+    --font-size-2xl: 1.8rem;
+    --font-size-3xl: 2.4rem;
+    --font-size-4xl: 3.2rem;
 
     /* === التباعد === */
     --spacing-xs: 4px;
@@ -74,10 +84,11 @@
     --spacing-lg: 24px;
     --spacing-xl: 32px;
     --spacing-2xl: 48px;
+    --spacing-3xl: 64px;
 }
 
 /* ================================================================
-   2. إعادة التعيين (Reset & Base)
+   2. إعادة التعيين الأساسية (Reset & Base)
    ================================================================ */
 *,
 *::before,
@@ -91,24 +102,27 @@
 html {
     scroll-behavior: smooth;
     font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 body {
     font-family: var(--font-family);
     background: linear-gradient(135deg,
             var(--color-bg-start) 0%,
-            var(--color-bg-mid) 50%,
+            var(--color-bg-mid) 40%,
             var(--color-bg-end) 100%);
     background-attachment: fixed;
     color: var(--color-text-primary);
     min-height: 100vh;
     direction: rtl;
     overflow-x: hidden;
-    line-height: 1.6;
+    line-height: 1.7;
+    position: relative;
 }
 
 /* ================================================================
-   3. خلفية متحركة (Animated Background)
+   3. خلفية متحركة (Animated Background with Particles Effect)
    ================================================================ */
 body::before {
     content: '';
@@ -118,13 +132,10 @@ body::before {
     width: 200%;
     height: 200%;
     background:
-        radial-gradient(ellipse at 60% 40%,
-            rgba(108, 99, 255, 0.12) 0%,
-            transparent 60%),
-        radial-gradient(ellipse at 20% 80%,
-            rgba(245, 158, 11, 0.08) 0%,
-            transparent 50%);
-    animation: bgFloat 15s ease-in-out infinite alternate;
+        radial-gradient(ellipse at 70% 30%, rgba(108, 99, 255, 0.08) 0%, transparent 50%),
+        radial-gradient(ellipse at 20% 80%, rgba(245, 158, 11, 0.05) 0%, transparent 40%),
+        radial-gradient(ellipse at 50% 50%, rgba(167, 139, 250, 0.03) 0%, transparent 70%);
+    animation: bgFloat 20s ease-in-out infinite alternate;
     pointer-events: none;
     z-index: 0;
 }
@@ -138,8 +149,39 @@ body::before {
     }
 }
 
+/* تأثير جسيمات إضافي عبر pseudo-element ثانٍ */
+body::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image:
+        radial-gradient(2px 2px at 20px 30px, rgba(255, 255, 255, 0.05), transparent),
+        radial-gradient(2px 2px at 40px 70px, rgba(255, 255, 255, 0.05), transparent),
+        radial-gradient(2px 2px at 50px 160px, rgba(255, 255, 255, 0.05), transparent),
+        radial-gradient(2px 2px at 90px 40px, rgba(255, 255, 255, 0.05), transparent),
+        radial-gradient(2px 2px at 130px 80px, rgba(255, 255, 255, 0.05), transparent),
+        radial-gradient(2px 2px at 160px 30px, rgba(255, 255, 255, 0.05), transparent);
+    background-size: 200px 200px;
+    opacity: 0.3;
+    pointer-events: none;
+    z-index: 0;
+    animation: particlesFloat 30s linear infinite;
+}
+
+@keyframes particlesFloat {
+    0% {
+        transform: translate(0, 0);
+    }
+    100% {
+        transform: translate(-50px, -50px);
+    }
+}
+
 /* ================================================================
-   4. الشريط العلوي (Topbar)
+   4. الشريط العلوي (Topbar) - تصميم زجاجي متطور
    ================================================================ */
 .topbar {
     position: fixed;
@@ -147,20 +189,20 @@ body::before {
     left: 0;
     right: 0;
     height: var(--topbar-height);
-    background: rgba(15, 12, 41, 0.88);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    background: rgba(10, 10, 26, 0.85);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
     border-bottom: 1px solid var(--color-glass-border);
     z-index: 1100;
-    padding: 0 var(--spacing-lg);
+    padding: 0 var(--spacing-xl);
     display: flex;
     align-items: center;
-    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 4px 40px rgba(0, 0, 0, 0.4);
 }
 
 .topbar-container {
     width: 100%;
-    max-width: 1440px;
+    max-width: var(--max-width);
     margin: 0 auto;
     display: flex;
     align-items: center;
@@ -177,31 +219,38 @@ body::before {
     flex-shrink: 0;
     cursor: pointer;
     user-select: none;
+    text-decoration: none;
+    transition: var(--transition);
+}
+
+.topbar-logo:hover {
+    transform: scale(1.02);
 }
 
 .topbar-logo i {
+    font-size: 1.8rem;
     background: linear-gradient(135deg,
             var(--color-gold),
             var(--color-orange));
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
-    font-size: 1.6rem;
 }
 
 .topbar-logo span {
     background: linear-gradient(135deg,
-            var(--color-primary),
+            var(--color-primary-light),
             var(--color-secondary));
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
+    font-size: 1.3rem;
 }
 
 /* === شريط البحث === */
 .topbar-search {
     flex: 1;
-    max-width: 480px;
+    max-width: 500px;
     margin: 0 var(--spacing-md);
 }
 
@@ -218,14 +267,15 @@ body::before {
     color: var(--color-text-muted);
     font-size: 0.9rem;
     pointer-events: none;
+    transition: var(--transition);
 }
 
 .search-bar {
     width: 100%;
-    background: rgba(255, 255, 255, 0.06);
+    background: rgba(255, 255, 255, 0.05);
     border: 1px solid var(--color-glass-border);
     border-radius: 30px;
-    padding: 9px 44px 9px 18px;
+    padding: 10px 44px 10px 18px;
     color: var(--color-text-primary);
     font-size: var(--font-size-base);
     font-family: var(--font-family);
@@ -235,43 +285,61 @@ body::before {
 
 .search-bar::placeholder {
     color: var(--color-text-muted);
+    font-size: 0.9rem;
 }
 
 .search-bar:focus {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.08);
     border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.2);
+    box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.15);
+}
+
+.search-bar:focus~.search-icon {
+    color: var(--color-primary);
 }
 
 /* === نتائج البحث === */
 .search-results {
     position: absolute;
-    top: calc(100% + 6px);
+    top: calc(100% + 8px);
     left: 0;
     right: 0;
-    background: rgba(15, 12, 41, 0.96);
-    backdrop-filter: blur(20px);
+    background: rgba(10, 10, 26, 0.96);
+    backdrop-filter: blur(24px);
     border-radius: var(--radius-sm);
     border: 1px solid var(--color-glass-border);
     box-shadow: var(--shadow-lg);
-    max-height: 320px;
+    max-height: 360px;
     overflow-y: auto;
     display: none;
     z-index: 2000;
+    padding: var(--spacing-sm) 0;
 }
 
 .search-results.active {
     display: block;
+    animation: slideDown 0.25s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .search-result-item {
-    padding: 12px 16px;
+    padding: 12px 18px;
     cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 14px;
     transition: var(--transition);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
 }
 
 .search-result-item:last-child {
@@ -285,13 +353,15 @@ body::before {
 .search-result-item i {
     color: var(--color-gold);
     font-size: 1.1rem;
-    width: 24px;
+    width: 28px;
     text-align: center;
+    flex-shrink: 0;
 }
 
 .search-result-item .result-text {
     color: var(--color-text-primary);
     font-weight: 600;
+    font-size: 0.95rem;
 }
 
 .search-result-item .result-sub {
@@ -323,6 +393,10 @@ body::before {
     color: var(--color-text-primary);
     font-weight: 600;
     font-size: var(--font-size-base);
+    padding: 4px 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 20px;
+    border: 1px solid var(--color-glass-border);
 }
 
 .sidebar-toggle {
@@ -335,14 +409,20 @@ body::before {
     padding: var(--spacing-xs);
     border-radius: var(--radius-xs);
     transition: var(--transition);
+    width: 40px;
+    height: 40px;
+    display: none;
+    align-items: center;
+    justify-content: center;
 }
 
 .sidebar-toggle:hover {
     background: rgba(255, 255, 255, 0.05);
+    color: var(--color-gold);
 }
 
 /* ================================================================
-   5. الشريط الجانبي (Sidebar)
+   5. الشريط الجانبي (Sidebar) - ثابت على اليمين مع تأثير زجاجي
    ================================================================ */
 .sidebar {
     position: fixed;
@@ -350,7 +430,7 @@ body::before {
     right: 0;
     width: var(--sidebar-width);
     height: calc(100vh - var(--topbar-height));
-    background: rgba(15, 12, 41, 0.92);
+    background: rgba(10, 10, 26, 0.92);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
     border-left: 1px solid var(--color-glass-border);
@@ -358,9 +438,9 @@ body::before {
     padding: var(--spacing-lg) var(--spacing-md);
     display: flex;
     flex-direction: column;
-    transition: transform 0.3s ease;
+    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
     overflow-y: auto;
-    box-shadow: -4px 0 30px rgba(0, 0, 0, 0.3);
+    box-shadow: -4px 0 40px rgba(0, 0, 0, 0.3);
 }
 
 .sidebar-inner {
@@ -382,6 +462,16 @@ body::before {
 
 .sidebar-logo i {
     color: var(--color-gold);
+    font-size: 1.4rem;
+}
+
+.sidebar-logo span {
+    background: linear-gradient(135deg,
+            var(--color-primary-light),
+            var(--color-secondary));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
 
 .sidebar-nav {
@@ -398,8 +488,8 @@ body::before {
 .sidebar-link {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 10px 14px;
+    gap: 14px;
+    padding: 11px 16px;
     border-radius: var(--radius-sm);
     color: var(--color-text-secondary);
     text-decoration: none;
@@ -407,6 +497,7 @@ body::before {
     font-weight: 600;
     transition: var(--transition);
     cursor: pointer;
+    position: relative;
 }
 
 .sidebar-link i {
@@ -428,14 +519,23 @@ body::before {
 
 .sidebar-link.active {
     background: linear-gradient(135deg,
-            rgba(108, 99, 255, 0.25),
-            rgba(167, 139, 250, 0.1));
+            rgba(108, 99, 255, 0.2),
+            rgba(167, 139, 250, 0.08));
     color: var(--color-secondary);
     border-right: 3px solid var(--color-primary);
 }
 
 .sidebar-link.active i {
     color: var(--color-gold);
+}
+
+.sidebar-link .badge {
+    background: var(--color-danger);
+    color: white;
+    font-size: 0.6rem;
+    padding: 1px 7px;
+    border-radius: 10px;
+    margin-right: auto;
 }
 
 .sidebar-footer {
@@ -463,16 +563,18 @@ body::before {
     position: relative;
     z-index: 1;
     width: calc(100% - var(--sidebar-width));
-    max-width: 1200px;
+    max-width: var(--max-width);
 }
 
 /* ================================================================
-   7. العناوين
+   7. العناوين والنصوص
    ================================================================ */
 h1,
 h2,
 h3,
-h4 {
+h4,
+h5,
+h6 {
     margin-bottom: var(--spacing-md);
     font-weight: 800;
     line-height: 1.3;
@@ -480,6 +582,7 @@ h4 {
 
 h1 {
     font-size: var(--font-size-3xl);
+    letter-spacing: -0.5px;
 }
 
 h2 {
@@ -503,8 +606,166 @@ h4 {
     color: var(--color-text-secondary);
 }
 
+.text-gold {
+    color: var(--color-gold);
+}
+
+.text-muted {
+    color: var(--color-text-muted);
+}
+
+.text-center {
+    text-align: center;
+}
+
+.text-danger {
+    color: var(--color-danger);
+}
+
+.text-success {
+    color: var(--color-success);
+}
+
 /* ================================================================
-   8. الكروت (Cards)
+   8. الأزرار (Buttons) - تصميم متطور مع تأثيرات
+   ================================================================ */
+.btn {
+    background: linear-gradient(135deg,
+            var(--color-gold),
+            var(--color-orange));
+    color: var(--color-text-inverse);
+    border: none;
+    padding: 10px 24px;
+    border-radius: 30px;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: var(--font-size-base);
+    font-family: var(--font-family);
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    text-decoration: none;
+    white-space: nowrap;
+    box-shadow: 0 4px 15px rgba(245, 158, 11, 0.25);
+    position: relative;
+    overflow: hidden;
+}
+
+.btn::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg,
+            rgba(255, 255, 255, 0.15),
+            transparent 50%);
+    pointer-events: none;
+}
+
+.btn:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 8px 30px rgba(245, 158, 11, 0.4);
+}
+
+.btn:active {
+    transform: scale(0.96);
+}
+
+.btn-outline {
+    background: transparent;
+    border: 2px solid var(--color-primary);
+    color: var(--color-primary-light);
+    box-shadow: none;
+}
+
+.btn-outline::after {
+    display: none;
+}
+
+.btn-outline:hover {
+    background: var(--color-primary);
+    color: white;
+    box-shadow: 0 8px 30px rgba(108, 99, 255, 0.3);
+    border-color: var(--color-primary);
+}
+
+.btn-sm {
+    padding: 6px 16px;
+    font-size: var(--font-size-sm);
+    border-radius: 20px;
+}
+
+.btn-large {
+    padding: 14px 36px;
+    font-size: var(--font-size-lg);
+    border-radius: 35px;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg,
+            var(--color-primary),
+            var(--color-secondary));
+    color: white;
+    box-shadow: 0 4px 15px rgba(108, 99, 255, 0.3);
+}
+
+.btn-primary:hover {
+    box-shadow: 0 8px 30px rgba(108, 99, 255, 0.4);
+}
+
+.btn-danger {
+    background: linear-gradient(135deg,
+            var(--color-danger),
+            #dc2626);
+    color: white;
+    box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+}
+
+.btn-danger:hover {
+    box-shadow: 0 8px 30px rgba(239, 68, 68, 0.4);
+}
+
+.btn-success {
+    background: linear-gradient(135deg,
+            var(--color-success),
+            #059669);
+    color: white;
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+}
+
+.btn-success:hover {
+    box-shadow: 0 8px 30px rgba(16, 185, 129, 0.4);
+}
+
+.btn-icon {
+    background: transparent;
+    border: none;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    padding: var(--spacing-sm);
+    border-radius: var(--radius-xs);
+    font-size: 1.2rem;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-icon:hover {
+    color: var(--color-text-primary);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.btn-icon.danger:hover {
+    color: var(--color-danger);
+    background: rgba(239, 68, 68, 0.15);
+}
+
+/* ================================================================
+   9. الكروت (Cards) - تصميم زجاجي مع تأثيرات hover
    ================================================================ */
 .glass-card {
     background: var(--color-glass-bg);
@@ -524,11 +785,11 @@ h4 {
 }
 
 /* ================================================================
-   9. الشبكات (Grids)
+   10. الشبكات (Grids) - عرض الصفوف والمواد والوحدات
    ================================================================ */
 .grades-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
     gap: var(--spacing-md);
     margin-top: var(--spacing-md);
 }
@@ -537,44 +798,171 @@ h4 {
     background: var(--color-glass-bg);
     backdrop-filter: blur(10px);
     border-radius: var(--radius);
-    padding: var(--spacing-md);
+    padding: var(--spacing-lg) var(--spacing-md);
     text-align: center;
     cursor: pointer;
     transition: var(--transition);
     border: 1px solid var(--color-glass-border);
+    position: relative;
+    overflow: hidden;
+}
+
+.grade-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg,
+            rgba(108, 99, 255, 0.05),
+            transparent 60%);
+    opacity: 0;
+    transition: var(--transition);
+}
+
+.grade-card:hover::before {
+    opacity: 1;
 }
 
 .grade-card:hover {
     background: var(--color-glass-hover);
     border-color: var(--color-primary);
-    transform: scale(1.04);
-    box-shadow: 0 8px 25px rgba(108, 99, 255, 0.2);
+    transform: translateY(-6px) scale(1.02);
+    box-shadow: var(--shadow-glow);
 }
 
-.grade-card .grade-num {
+.grade-card .grade-icon {
     font-size: var(--font-size-2xl);
     font-weight: 900;
     color: var(--color-primary-light);
+    margin-bottom: var(--spacing-xs);
 }
 
 .grade-card .grade-label {
     font-size: var(--font-size-base);
     color: var(--color-text-secondary);
+    font-weight: 600;
+}
+
+.grade-card small {
+    color: var(--color-text-muted);
+    font-size: var(--font-size-sm);
+    display: block;
     margin-top: var(--spacing-xs);
 }
 
 /* ================================================================
-   10. العناصر التعليمية (Subjects, Units, Lessons)
+   11. عناصر المواد والوحدات والدروس
    ================================================================ */
-.subject-card,
-.unit-card,
-.lesson-card {
+.subjects-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-md);
+}
+
+.subject-card {
     background: var(--color-glass-bg);
     backdrop-filter: blur(10px);
-    padding: 12px 18px;
+    padding: var(--spacing-lg);
+    border-radius: var(--radius);
+    border: 1px solid var(--color-glass-border);
+    cursor: pointer;
+    transition: var(--transition);
+    text-align: center;
+}
+
+.subject-card:hover {
+    border-color: var(--color-primary);
+    background: var(--color-glass-hover);
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-glow);
+}
+
+.subject-card .subject-icon {
+    font-size: 2rem;
+    color: var(--color-gold);
+    margin-bottom: var(--spacing-sm);
+}
+
+.subject-card h3 {
+    font-size: var(--font-size-base);
+    margin-bottom: var(--spacing-xs);
+}
+
+.subject-card small {
+    color: var(--color-text-muted);
+    font-size: var(--font-size-sm);
+}
+
+.units-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-md);
+}
+
+.unit-card {
+    background: var(--color-glass-bg);
+    backdrop-filter: blur(10px);
+    padding: var(--spacing-lg);
+    border-radius: var(--radius);
+    border: 1px solid var(--color-glass-border);
+    cursor: pointer;
+    transition: var(--transition);
+    text-align: center;
+    position: relative;
+}
+
+.unit-card:hover {
+    border-color: var(--color-secondary);
+    background: var(--color-glass-hover);
+    transform: translateY(-4px);
+}
+
+.unit-card .unit-icon {
+    font-size: 1.8rem;
+    color: var(--color-secondary);
+    margin-bottom: var(--spacing-sm);
+}
+
+.unit-card h3 {
+    font-size: var(--font-size-base);
+    margin-bottom: var(--spacing-xs);
+}
+
+.unit-card small {
+    color: var(--color-text-muted);
+    font-size: var(--font-size-sm);
+}
+
+.unit-card .exam-badge {
+    display: inline-block;
+    margin-top: var(--spacing-sm);
+    background: rgba(245, 158, 11, 0.15);
+    color: var(--color-gold);
+    padding: 2px 12px;
+    border-radius: 12px;
+    font-size: var(--font-size-sm);
+}
+
+/* ================================================================
+   12. قائمة الدروس
+   ================================================================ */
+.lessons-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-md);
+}
+
+.lesson-item {
+    background: var(--color-glass-bg);
+    backdrop-filter: blur(8px);
+    padding: 14px 20px;
     border-radius: var(--radius-sm);
     border: 1px solid var(--color-glass-border);
-    margin-bottom: var(--spacing-sm);
     cursor: pointer;
     transition: var(--transition);
     display: flex;
@@ -584,132 +972,499 @@ h4 {
     gap: var(--spacing-sm);
 }
 
-.subject-card:hover,
-.unit-card:hover,
-.lesson-card:hover {
+.lesson-item:hover:not(.locked) {
     border-color: var(--color-primary);
     background: var(--color-glass-hover);
+    transform: translateX(-4px);
 }
 
-.subject-card h3,
-.unit-card h3,
-.lesson-card h4 {
-    margin: 0;
+.lesson-item.locked {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.lesson-item.completed {
+    border-color: var(--color-success);
+    background: rgba(16, 185, 129, 0.06);
+}
+
+.lesson-item .lesson-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+}
+
+.lesson-item .lesson-status-icon {
+    font-size: 1.2rem;
+    width: 30px;
+    text-align: center;
+}
+
+.lesson-item .lesson-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.lesson-item .lesson-title {
+    font-weight: 600;
     color: var(--color-text-primary);
 }
 
-.subject-card small,
-.unit-card small {
+.lesson-item .lesson-meta {
+    display: flex;
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+    margin-top: 2px;
+}
+
+.lesson-item .badge-free {
+    background: rgba(16, 185, 129, 0.15);
+    color: var(--color-success);
+    font-size: var(--font-size-xs);
+    padding: 1px 10px;
+    border-radius: 10px;
+}
+
+.lesson-item .badge-paid {
+    background: rgba(245, 158, 11, 0.15);
+    color: var(--color-gold);
+    font-size: var(--font-size-xs);
+    padding: 1px 10px;
+    border-radius: 10px;
+}
+
+.lesson-item .badge-completed {
+    background: rgba(16, 185, 129, 0.2);
+    color: var(--color-success);
+    font-size: var(--font-size-xs);
+    padding: 1px 10px;
+    border-radius: 10px;
+}
+
+.lesson-item .lesson-right {
+    display: flex;
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+}
+
+.lesson-item .lesson-type {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--color-text-muted);
+    font-size: var(--font-size-xs);
+    padding: 2px 10px;
+    border-radius: 10px;
+}
+
+/* ================================================================
+   13. صفحة الدرس (Lesson Page)
+   ================================================================ */
+.lesson-page {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.lesson-page .page-header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    flex-wrap: wrap;
+    margin-bottom: var(--spacing-lg);
+}
+
+.lesson-page .page-title {
+    flex: 1;
+    margin: 0;
+}
+
+.lesson-page .lesson-badges {
+    display: flex;
+    gap: var(--spacing-sm);
+}
+
+.lesson-container {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-lg);
+}
+
+.lesson-video-section {
+    background: var(--color-glass-bg);
+    backdrop-filter: blur(10px);
+    border-radius: var(--radius);
+    padding: var(--spacing-lg);
+    border: 1px solid var(--color-glass-border);
+}
+
+.lesson-video-section h3 {
+    margin-bottom: var(--spacing-md);
+    color: var(--color-gold);
+}
+
+.video-container {
+    position: relative;
+    padding-bottom: 56.25%;
+    height: 0;
+    overflow: hidden;
+    border-radius: var(--radius-sm);
+    background: #000;
+}
+
+.video-container iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+.lesson-text-section,
+.lesson-examples-section,
+.lesson-exam-section,
+.lesson-qa-section {
+    background: var(--color-glass-bg);
+    backdrop-filter: blur(10px);
+    border-radius: var(--radius);
+    padding: var(--spacing-lg);
+    border: 1px solid var(--color-glass-border);
+}
+
+.lesson-text-section h3,
+.lesson-examples-section h3,
+.lesson-exam-section h3,
+.lesson-qa-section h3 {
+    color: var(--color-gold);
+    margin-bottom: var(--spacing-md);
+}
+
+.lesson-text-content,
+.lesson-examples-content {
+    line-height: 1.9;
+    color: var(--color-text-secondary);
+}
+
+.lesson-text-content h1,
+.lesson-text-content h2,
+.lesson-text-content h3 {
+    color: var(--color-text-primary);
+    margin-top: var(--spacing-md);
+}
+
+.lesson-text-content p,
+.lesson-examples-content p {
+    margin-bottom: var(--spacing-sm);
+}
+
+.lesson-text-content ul,
+.lesson-text-content ol {
+    padding-right: var(--spacing-xl);
+    margin-bottom: var(--spacing-sm);
+}
+
+.lesson-text-content code {
+    background: rgba(108, 99, 255, 0.15);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    color: var(--color-secondary);
+}
+
+.locked-content {
+    text-align: center;
+    padding: var(--spacing-xl);
+    color: var(--color-text-muted);
+}
+
+.locked-content i {
+    font-size: 3rem;
+    color: var(--color-gold);
+    display: block;
+    margin-bottom: var(--spacing-md);
+}
+
+.locked-content p {
+    margin-bottom: var(--spacing-md);
+}
+
+.locked-content.small {
+    padding: var(--spacing-md);
+}
+
+.locked-content.small i {
+    font-size: 1.5rem;
+}
+
+/* ================================================================
+   14. الامتحانات (Exams)
+   ================================================================ */
+.exam-container {
+    max-width: 700px;
+    margin: 0 auto;
+}
+
+.exam-card {
+    background: var(--color-glass-bg);
+    backdrop-filter: blur(12px);
+    border-radius: var(--radius);
+    padding: var(--spacing-xl);
+    border: 1px solid var(--color-glass-border);
+}
+
+.exam-progress {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-xl);
+}
+
+.exam-progress span {
+    color: var(--color-text-secondary);
+    font-weight: 600;
+    font-size: var(--font-size-sm);
+    white-space: nowrap;
+}
+
+.exam-progress-bar {
+    flex: 1;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.exam-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg,
+            var(--color-primary),
+            var(--color-gold));
+    border-radius: 3px;
+    transition: width 0.5s ease;
+}
+
+.exam-question h3 {
+    font-size: var(--font-size-lg);
+    margin-bottom: var(--spacing-lg);
+    line-height: 1.6;
+}
+
+.exam-options {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-xl);
+}
+
+.exam-option {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 2px solid var(--color-glass-border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.exam-option:hover {
+    background: var(--color-glass-hover);
+    border-color: var(--color-primary);
+}
+
+.exam-option.selected {
+    background: rgba(108, 99, 255, 0.15);
+    border-color: var(--color-primary);
+}
+
+.exam-option input[type="radio"] {
+    accent-color: var(--color-primary);
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.exam-option .option-text {
+    color: var(--color-text-primary);
+    font-size: var(--font-size-base);
+}
+
+/* === نتائج الامتحان === */
+.exam-result-container {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.exam-result-card {
+    background: var(--color-glass-bg);
+    backdrop-filter: blur(12px);
+    border-radius: var(--radius);
+    padding: var(--spacing-2xl);
+    border: 1px solid var(--color-glass-border);
+    text-align: center;
+}
+
+.exam-result-card.passed {
+    border-color: rgba(16, 185, 129, 0.3);
+}
+
+.exam-result-card.failed {
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+.exam-result-card .result-icon {
+    font-size: 4rem;
+    margin-bottom: var(--spacing-md);
+}
+
+.exam-result-card .result-score {
+    font-size: 4rem;
+    font-weight: 900;
+    margin: var(--spacing-md) 0;
+}
+
+.exam-result-card.passed .result-score {
+    color: var(--color-success);
+}
+
+.exam-result-card.failed .result-score {
+    color: var(--color-danger);
+}
+
+.exam-result-card .result-message {
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-lg);
+    margin-bottom: var(--spacing-md);
+}
+
+.exam-result-card .result-details {
+    color: var(--color-text-muted);
+    font-size: var(--font-size-sm);
+    margin-bottom: var(--spacing-lg);
+}
+
+.exam-result-card .result-actions {
+    display: flex;
+    gap: var(--spacing-md);
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+/* ================================================================
+   15. أسئلة وأجوبة (Q&A)
+   ================================================================ */
+.qa-item {
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: var(--radius-sm);
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-sm);
+    border: 1px solid var(--color-glass-border);
+}
+
+.qa-question {
+    margin-bottom: var(--spacing-sm);
+}
+
+.qa-answer {
+    background: rgba(16, 185, 129, 0.05);
+    border-right: 3px solid var(--color-success);
+    padding: var(--spacing-md);
+    border-radius: var(--radius-xs);
+    margin-top: var(--spacing-sm);
+}
+
+.qa-meta {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-xs);
+}
+
+.qa-meta strong {
+    color: var(--color-text-primary);
+}
+
+.qa-meta .qa-time {
     color: var(--color-text-muted);
     font-size: var(--font-size-sm);
 }
 
+.qa-item p {
+    color: var(--color-text-secondary);
+    line-height: 1.6;
+}
+
 /* ================================================================
-   11. الأزرار (Buttons)
+   16. النماذج والنوافذ المنبثقة (Forms & Modals)
    ================================================================ */
-.btn {
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    padding: var(--spacing-md);
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.modal-card {
+    background: rgba(10, 10, 26, 0.96);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border-radius: var(--radius-xl);
+    padding: var(--spacing-2xl);
+    width: 100%;
+    max-width: 460px;
+    max-height: 90vh;
+    overflow-y: auto;
+    border: 1px solid var(--color-glass-border);
+    box-shadow: var(--shadow-lg);
+    animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-lg);
+}
+
+.modal-header h3 {
+    margin: 0;
+    font-size: var(--font-size-xl);
     background: linear-gradient(135deg,
             var(--color-gold),
             var(--color-orange));
-    color: var(--color-text-inverse);
-    border: none;
-    padding: 8px 18px;
-    border-radius: 30px;
-    cursor: pointer;
-    font-weight: 700;
-    font-size: var(--font-size-base);
-    font-family: var(--font-family);
-    transition: var(--transition);
-    display: inline-flex;
-    align-items: center;
-    gap: var(--spacing-xs);
-    text-decoration: none;
-    white-space: nowrap;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
 
-.btn:hover {
-    transform: scale(1.04);
-    box-shadow: 0 6px 20px rgba(245, 158, 11, 0.35);
-}
-
-.btn:active {
-    transform: scale(0.96);
-}
-
-.btn-outline {
-    background: transparent;
-    border: 2px solid var(--color-primary);
-    color: var(--color-primary-light);
-}
-
-.btn-outline:hover {
-    background: var(--color-primary);
-    color: white;
-    box-shadow: 0 6px 20px rgba(108, 99, 255, 0.3);
-}
-
-.btn-sm {
-    padding: 5px 14px;
-    font-size: var(--font-size-sm);
-}
-
-.btn-primary {
-    background: linear-gradient(135deg,
-            var(--color-primary),
-            var(--color-secondary));
-    color: white;
-    border: none;
-    padding: 10px 24px;
-    border-radius: 30px;
-    cursor: pointer;
-    font-weight: 700;
-    font-size: var(--font-size-base);
-    font-family: var(--font-family);
-    transition: var(--transition);
-}
-
-.btn-primary:hover {
-    transform: scale(1.04);
-    box-shadow: 0 6px 25px rgba(108, 99, 255, 0.4);
-}
-
-.btn-danger {
-    background: linear-gradient(135deg,
-            var(--color-danger),
-            #dc2626);
-    color: white;
-    border: none;
-    padding: 4px 12px;
-    border-radius: 20px;
-    cursor: pointer;
-    font-weight: 600;
-    font-size: var(--font-size-sm);
-    transition: var(--transition);
-}
-
-.btn-danger:hover {
-    opacity: 0.9;
-}
-
-.btn-icon {
-    background: transparent;
-    border: none;
-    color: var(--color-text-secondary);
-    cursor: pointer;
-    padding: var(--spacing-sm);
-    border-radius: var(--radius-xs);
-    font-size: 1.2rem;
-    transition: var(--transition);
-}
-
-.btn-icon:hover {
-    color: var(--color-text-primary);
-    background: rgba(255, 255, 255, 0.1);
-}
-
-/* ================================================================
-   12. النماذج (Forms)
-   ================================================================ */
 .auth-form {
     display: flex;
     flex-direction: column;
@@ -719,28 +1474,29 @@ h4 {
 .input-group {
     display: flex;
     align-items: center;
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.04);
     border: 1px solid var(--color-glass-border);
     border-radius: var(--radius-sm);
-    padding: 0 14px;
-    gap: 10px;
+    padding: 0 16px;
+    gap: 12px;
     transition: var(--transition);
 }
 
 .input-group:focus-within {
     border-color: var(--color-primary);
-    background: rgba(108, 99, 255, 0.08);
-    box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.15);
+    background: rgba(108, 99, 255, 0.06);
+    box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.1);
 }
 
 .input-group i {
     color: var(--color-text-muted);
     font-size: 0.95rem;
-    width: 18px;
+    width: 20px;
     flex-shrink: 0;
 }
 
-.input-group input {
+.input-group input,
+.input-group select {
     flex: 1;
     background: transparent;
     border: none;
@@ -748,7 +1504,7 @@ h4 {
     color: var(--color-text-primary);
     font-family: var(--font-family);
     font-size: var(--font-size-base);
-    padding: 12px 0;
+    padding: 14px 0;
     direction: rtl;
     min-width: 0;
 }
@@ -757,9 +1513,14 @@ h4 {
     color: var(--color-text-muted);
 }
 
+.input-group input:-webkit-autofill {
+    -webkit-box-shadow: 0 0 0 100px rgba(10, 10, 26, 0.9) inset !important;
+    -webkit-text-fill-color: var(--color-text-primary) !important;
+}
+
 .auth-error {
-    background: rgba(239, 68, 68, 0.15);
-    border: 1px solid rgba(239, 68, 68, 0.3);
+    background: rgba(239, 68, 68, 0.12);
+    border: 1px solid rgba(239, 68, 68, 0.25);
     color: #fca5a5;
     padding: 10px 14px;
     border-radius: var(--radius-sm);
@@ -785,7 +1546,7 @@ h4 {
 }
 
 /* ================================================================
-   13. اختيار الخطة والصفوف (Plan & Grade Selection)
+   17. اختيار الخطة والصفوف (Plan & Grade Selection)
    ================================================================ */
 .plan-selector {
     display: flex;
@@ -807,8 +1568,8 @@ h4 {
     flex-direction: column;
     align-items: center;
     gap: var(--spacing-xs);
-    padding: 12px 8px;
-    background: rgba(255, 255, 255, 0.05);
+    padding: 14px 8px;
+    background: rgba(255, 255, 255, 0.04);
     border: 2px solid var(--color-glass-border);
     border-radius: var(--radius-sm);
     transition: var(--transition);
@@ -816,7 +1577,7 @@ h4 {
 }
 
 .plan-card i {
-    font-size: 1.3rem;
+    font-size: 1.5rem;
     color: var(--color-text-muted);
 }
 
@@ -832,8 +1593,8 @@ h4 {
 
 .plan-option input:checked+.plan-card {
     border-color: var(--color-gold);
-    background: rgba(245, 158, 11, 0.1);
-    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15);
+    background: rgba(245, 158, 11, 0.08);
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
 }
 
 .plan-option input:checked+.plan-card i {
@@ -849,7 +1610,7 @@ h4 {
 
 .grades-checkboxes {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
     gap: var(--spacing-xs);
 }
 
@@ -860,6 +1621,13 @@ h4 {
     font-size: var(--font-size-sm);
     color: var(--color-text-secondary);
     cursor: pointer;
+    padding: 4px 8px;
+    border-radius: var(--radius-xs);
+    transition: var(--transition);
+}
+
+.grades-checkboxes label:hover {
+    background: rgba(255, 255, 255, 0.05);
 }
 
 .grades-checkboxes input[type="checkbox"] {
@@ -870,150 +1638,459 @@ h4 {
 }
 
 /* ================================================================
-   14. النوافذ المنبثقة (Modals)
+   18. الصفحة الرئيسية للمستخدم (User Dashboard)
    ================================================================ */
-.modal-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.7);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+.user-dashboard {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 2000;
-    padding: var(--spacing-md);
+    flex-direction: column;
+    gap: var(--spacing-xl);
 }
 
-.modal-card {
-    background: rgba(20, 20, 50, 0.96);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
-    border-radius: var(--radius);
-    padding: var(--spacing-xl);
-    width: 100%;
-    max-width: 440px;
-    max-height: 90vh;
-    overflow-y: auto;
-    border: 1px solid var(--color-glass-border);
-    box-shadow: var(--shadow-lg);
-    animation: modalIn 0.3s ease;
-}
-
-@keyframes modalIn {
-    from {
-        opacity: 0;
-        transform: scale(0.95) translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: scale(1) translateY(0);
-    }
-}
-
-.modal-header {
+.welcome-banner {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: var(--spacing-md);
-}
-
-.modal-header h3 {
-    margin: 0;
-    font-size: var(--font-size-xl);
-    background: linear-gradient(135deg,
-            var(--color-gold),
-            var(--color-orange));
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-
-/* ================================================================
-   15. الفيديو والمحتوى التعليمي
-   ================================================================ */
-.video-container {
-    position: relative;
-    padding-bottom: 56.25%;
-    height: 0;
-    overflow: hidden;
-    margin: var(--spacing-md) 0;
-    border-radius: var(--radius-sm);
-    background: #000;
-}
-
-.video-container iframe {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    border: none;
-}
-
-.lesson-text,
-.lesson-examples {
+    flex-wrap: wrap;
+    gap: var(--spacing-md);
     background: var(--color-glass-bg);
-    padding: var(--spacing-md);
-    border-radius: var(--radius-sm);
-    margin: var(--spacing-sm) 0;
+    backdrop-filter: blur(12px);
+    border-radius: var(--radius);
+    padding: var(--spacing-xl);
     border: 1px solid var(--color-glass-border);
 }
 
-.lesson-text h3,
-.lesson-examples h3 {
-    margin-top: 0;
-    color: var(--color-gold);
+.welcome-text h2 {
+    margin: 0;
 }
 
-.lesson-container {
+.welcome-text p {
+    color: var(--color-text-secondary);
+    margin: 0;
+}
+
+.quick-actions {
+    display: flex;
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: var(--spacing-md);
+}
+
+.stat-card {
+    background: var(--color-glass-bg);
+    backdrop-filter: blur(10px);
+    border-radius: var(--radius);
+    padding: var(--spacing-lg);
+    border: 1px solid var(--color-glass-border);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    transition: var(--transition);
+}
+
+.stat-card:hover {
+    border-color: var(--color-primary);
+    transform: translateY(-2px);
+}
+
+.stat-card .stat-icon {
+    font-size: 2rem;
+    color: var(--color-gold);
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(245, 158, 11, 0.1);
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.stat-card .stat-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.stat-card .stat-value {
+    font-size: var(--font-size-2xl);
+    font-weight: 900;
+    color: var(--color-text-primary);
+}
+
+.stat-card .stat-label {
+    color: var(--color-text-muted);
+    font-size: var(--font-size-sm);
+}
+
+.suggested-section,
+.recent-section,
+.user-grades-section {
+    margin-top: var(--spacing-md);
+}
+
+.suggested-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: var(--spacing-md);
+}
+
+.suggested-card {
+    background: var(--color-glass-bg);
+    backdrop-filter: blur(10px);
+    border-radius: var(--radius);
+    padding: var(--spacing-md);
+    border: 1px solid var(--color-glass-border);
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.suggested-card:hover {
+    border-color: var(--color-primary);
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-glow);
+}
+
+.suggested-card .suggested-thumbnail {
+    width: 60px;
+    height: 60px;
+    border-radius: var(--radius-sm);
+    background: linear-gradient(135deg,
+            rgba(108, 99, 255, 0.2),
+            rgba(245, 158, 11, 0.1));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    color: var(--color-gold);
+    flex-shrink: 0;
+}
+
+.suggested-card .suggested-info h4 {
+    margin: 0;
+    font-size: var(--font-size-base);
+}
+
+.suggested-card .suggested-info p {
+    margin: 0;
+    color: var(--color-text-muted);
+    font-size: var(--font-size-sm);
+}
+
+.recent-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: var(--spacing-md);
+}
+
+.recent-card {
+    background: var(--color-glass-bg);
+    backdrop-filter: blur(10px);
+    border-radius: var(--radius);
+    padding: var(--spacing-md);
+    border: 1px solid var(--color-glass-border);
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.recent-card:hover {
+    border-color: var(--color-secondary);
+    transform: translateY(-4px);
+}
+
+.recent-card .recent-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: rgba(167, 139, 250, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    color: var(--color-secondary);
+    flex-shrink: 0;
+}
+
+.recent-card .recent-info h4 {
+    margin: 0;
+    font-size: var(--font-size-base);
+}
+
+.recent-card .recent-info p {
+    margin: 0;
+    color: var(--color-text-muted);
+    font-size: var(--font-size-sm);
+}
+
+.section-title {
+    font-size: var(--font-size-xl);
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin-bottom: var(--spacing-md);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+/* ================================================================
+   19. صفحة الحساب (Profile Page)
+   ================================================================ */
+.profile-page {
     max-width: 900px;
     margin: 0 auto;
 }
 
-/* ================================================================
-   16. الامتحانات (Exams)
-   ================================================================ */
-.option-item {
+.profile-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-lg);
+}
+
+.profile-card {
+    background: var(--color-glass-bg);
+    backdrop-filter: blur(12px);
+    border-radius: var(--radius);
+    padding: var(--spacing-xl);
+    border: 1px solid var(--color-glass-border);
+}
+
+.profile-card h3 {
+    margin-bottom: var(--spacing-md);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    color: var(--color-gold);
+}
+
+.profile-info {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.info-row strong {
+    color: var(--color-text-muted);
+}
+
+.progress-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--spacing-md);
+    text-align: center;
+}
+
+.progress-stat .stat-number {
+    font-size: var(--font-size-2xl);
+    font-weight: 900;
+    color: var(--color-gold);
     display: block;
-    padding: 10px 14px;
-    margin: var(--spacing-xs) 0;
-    background: rgba(255, 255, 255, 0.04);
-    border: 2px solid var(--color-glass-border);
-    border-radius: var(--radius-sm);
-    cursor: pointer;
-    transition: var(--transition);
-    font-size: var(--font-size-base);
 }
 
-.option-item:hover {
-    background: var(--color-glass-hover);
-    border-color: var(--color-primary);
+.progress-stat .stat-label {
+    color: var(--color-text-muted);
+    font-size: var(--font-size-sm);
 }
 
-.option-item.selected {
-    background: rgba(108, 99, 255, 0.2);
-    border-color: var(--color-primary);
+.upgrade-card {
+    border-color: rgba(245, 158, 11, 0.2);
+    background: rgba(245, 158, 11, 0.04);
+}
+
+.upgrade-card .btn {
+    width: 100%;
+    margin-top: var(--spacing-sm);
+}
+
+.upgrade-note {
+    color: var(--color-text-muted);
+    font-size: var(--font-size-sm);
+    text-align: center;
+    margin-top: var(--spacing-sm);
+}
+
+.support-card {
+    border-color: rgba(108, 99, 255, 0.2);
 }
 
 /* ================================================================
-   17. جداول الإدارة (Admin Tables) - محسّنة
+   20. صفحة "عن المنصة" (About Page)
    ================================================================ */
+.about-page {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.about-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-lg);
+}
+
+.about-card {
+    background: var(--color-glass-bg);
+    backdrop-filter: blur(12px);
+    border-radius: var(--radius);
+    padding: var(--spacing-xl);
+    border: 1px solid var(--color-glass-border);
+}
+
+.about-card h3 {
+    color: var(--color-gold);
+    margin-bottom: var(--spacing-md);
+}
+
+.about-card ul {
+    list-style: none;
+    padding: 0;
+}
+
+.about-card ul li {
+    padding: var(--spacing-sm) 0;
+    color: var(--color-text-secondary);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.contact-card {
+    grid-column: 1 / -1;
+    text-align: center;
+}
+
+.contact-card .btn {
+    margin-top: var(--spacing-md);
+}
+
+/* ================================================================
+   21. لوحة الإدارة (Admin Panel)
+   ================================================================ */
+.admin-page {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.page-header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    flex-wrap: wrap;
+    margin-bottom: var(--spacing-lg);
+}
+
+.page-title {
+    flex: 1;
+    margin: 0;
+}
+
+.admin-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+}
+
+.admin-stat-card {
+    background: var(--color-glass-bg);
+    backdrop-filter: blur(10px);
+    border-radius: var(--radius);
+    padding: var(--spacing-lg);
+    border: 1px solid var(--color-glass-border);
+    text-align: center;
+}
+
+.admin-stat-card .stat-number {
+    font-size: var(--font-size-2xl);
+    font-weight: 900;
+    color: var(--color-gold);
+    display: block;
+}
+
+.admin-stat-card .stat-label {
+    color: var(--color-text-muted);
+    font-size: var(--font-size-sm);
+}
+
+.admin-controls {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    flex-wrap: wrap;
+    margin-bottom: var(--spacing-lg);
+    padding: var(--spacing-md);
+    background: var(--color-glass-bg);
+    backdrop-filter: blur(10px);
+    border-radius: var(--radius);
+    border: 1px solid var(--color-glass-border);
+}
+
+.admin-controls .search-box {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--color-glass-border);
+    border-radius: var(--radius-sm);
+    padding: 0 14px;
+    gap: 10px;
+    min-width: 200px;
+}
+
+.admin-controls .search-box i {
+    color: var(--color-text-muted);
+}
+
+.admin-controls .search-box input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--color-text-primary);
+    font-family: var(--font-family);
+    font-size: var(--font-size-base);
+    padding: 10px 0;
+    direction: rtl;
+}
+
+.admin-controls .filter-buttons {
+    display: flex;
+    gap: var(--spacing-xs);
+    flex-wrap: wrap;
+}
+
+.admin-table-wrapper {
+    overflow-x: auto;
+    margin-bottom: var(--spacing-xl);
+    border-radius: var(--radius);
+    border: 1px solid var(--color-glass-border);
+}
+
 .admin-table {
     width: 100%;
     border-collapse: collapse;
     font-size: var(--font-size-sm);
     background: var(--color-glass-bg);
-    border-radius: var(--radius-sm);
-    overflow: hidden;
 }
 
 .admin-table thead {
-    background: rgba(108, 99, 255, 0.15);
+    background: rgba(108, 99, 255, 0.1);
 }
 
 .admin-table th {
-    padding: 10px 12px;
+    padding: 12px 16px;
     text-align: right;
     font-weight: 700;
     color: var(--color-secondary);
@@ -1023,73 +2100,428 @@ h4 {
 }
 
 .admin-table td {
-    padding: 10px 12px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 10px 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
     vertical-align: middle;
-    font-size: var(--font-size-sm);
 }
 
 .admin-table tr:hover td {
-    background: rgba(255, 255, 255, 0.03);
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.admin-table .actions-cell {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+    min-width: 200px;
 }
 
 .admin-table .btn-sm {
-    font-size: var(--font-size-sm);
-    padding: 4px 10px;
-    margin: 2px;
-    border-radius: 20px;
-}
-
-.admin-table .btn-danger {
-    font-size: var(--font-size-sm);
-    padding: 4px 10px;
-    margin: 2px;
-    border-radius: 20px;
+    font-size: var(--font-size-xs);
+    padding: 3px 10px;
+    margin: 1px;
+    border-radius: 15px;
 }
 
 /* ================================================================
-   18. شجرة المحتوى في الإدارة (Admin Content Tree)
+   22. إدارة المحتوى (Content Management)
    ================================================================ */
-.admin-content-tree {
+.content-grade-card {
+    background: var(--color-glass-bg);
+    backdrop-filter: blur(10px);
+    border-radius: var(--radius);
+    padding: var(--spacing-lg);
+    border: 1px solid var(--color-glass-border);
+    margin-bottom: var(--spacing-md);
+}
+
+.content-grade-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+    padding-bottom: var(--spacing-sm);
+    border-bottom: 1px solid var(--color-glass-border);
+}
+
+.content-grade-header h3 {
+    margin: 0;
+}
+
+.content-actions {
+    display: flex;
+    gap: var(--spacing-xs);
+    flex-wrap: wrap;
+}
+
+.content-subjects {
     padding-right: var(--spacing-md);
+}
+
+.content-subject-item {
+    padding: var(--spacing-sm) 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.content-subject-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+}
+
+.content-units {
+    padding-right: var(--spacing-lg);
+    margin-top: var(--spacing-xs);
+}
+
+.content-unit-item {
+    padding: var(--spacing-sm) 0;
     border-right: 2px solid var(--color-gold);
-    margin: var(--spacing-sm) 0;
+    padding-right: var(--spacing-md);
+    margin-bottom: var(--spacing-sm);
 }
 
-.admin-content-tree .admin-content-tree {
-    border-right-color: var(--color-primary);
+.content-unit-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
 }
 
-.admin-content-tree .admin-content-tree .admin-content-tree {
-    border-right-color: var(--color-secondary);
+.content-lessons {
+    padding-right: var(--spacing-lg);
+    margin-top: var(--spacing-xs);
+}
+
+.content-lesson-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-xs) 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.02);
 }
 
 /* ================================================================
-   19. زر العودة للأعلى (Back to Top)
+   23. تفاصيل المستخدم (User Details)
+   ================================================================ */
+.user-details-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-lg);
+}
+
+.user-detail-card {
+    background: var(--color-glass-bg);
+    backdrop-filter: blur(12px);
+    border-radius: var(--radius);
+    padding: var(--spacing-xl);
+    border: 1px solid var(--color-glass-border);
+}
+
+.user-detail-card h3 {
+    color: var(--color-gold);
+    margin-bottom: var(--spacing-md);
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.detail-row strong {
+    color: var(--color-text-muted);
+}
+
+.progress-summary {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.progress-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.progress-item .progress-value {
+    font-weight: 700;
+    color: var(--color-gold);
+}
+
+.user-grades-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+}
+
+.grade-tag {
+    background: rgba(108, 99, 255, 0.15);
+    color: var(--color-secondary);
+    padding: 4px 14px;
+    border-radius: 15px;
+    font-size: var(--font-size-sm);
+}
+
+/* ================================================================
+   24. طلبات الترقية (Upgrade Requests)
+   ================================================================ */
+.upgrade-requests-section {
+    margin-top: var(--spacing-xl);
+    padding-top: var(--spacing-xl);
+    border-top: 1px solid var(--color-glass-border);
+}
+
+.upgrade-requests-section h3 {
+    color: var(--color-gold);
+    margin-bottom: var(--spacing-md);
+}
+
+/* ================================================================
+   25. الصفحة الرئيسية العامة (Hero Section)
+   ================================================================ */
+.hero-section {
+    text-align: center;
+    padding: var(--spacing-2xl) var(--spacing-xl);
+    background: var(--color-glass-bg);
+    backdrop-filter: blur(12px);
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--color-glass-border);
+    margin-bottom: var(--spacing-2xl);
+}
+
+.hero-content h1 {
+    font-size: var(--font-size-4xl);
+    margin-bottom: var(--spacing-md);
+}
+
+.hero-content .hero-subtitle {
+    font-size: var(--font-size-lg);
+    color: var(--color-text-secondary);
+    max-width: 600px;
+    margin: 0 auto var(--spacing-lg);
+}
+
+.hero-buttons {
+    display: flex;
+    gap: var(--spacing-md);
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+/* ================================================================
+   26. صفحة الميزات (Features Section)
+   ================================================================ */
+.features-section {
+    margin-bottom: var(--spacing-2xl);
+}
+
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: var(--spacing-lg);
+}
+
+.feature-card {
+    background: var(--color-glass-bg);
+    backdrop-filter: blur(10px);
+    border-radius: var(--radius);
+    padding: var(--spacing-xl);
+    border: 1px solid var(--color-glass-border);
+    text-align: center;
+    transition: var(--transition);
+}
+
+.feature-card:hover {
+    border-color: var(--color-primary);
+    transform: translateY(-6px);
+    box-shadow: var(--shadow-glow);
+}
+
+.feature-card .feature-icon {
+    font-size: 2.5rem;
+    color: var(--color-gold);
+    margin-bottom: var(--spacing-md);
+}
+
+.feature-card h3 {
+    font-size: var(--font-size-lg);
+    margin-bottom: var(--spacing-xs);
+}
+
+.feature-card p {
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+}
+
+/* ================================================================
+   27. قسم الحث على الاشتراك (CTA Section)
+   ================================================================ */
+.cta-section {
+    text-align: center;
+    padding: var(--spacing-2xl) var(--spacing-xl);
+    background: linear-gradient(135deg,
+            rgba(108, 99, 255, 0.08),
+            rgba(245, 158, 11, 0.04));
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--color-glass-border);
+    margin-top: var(--spacing-2xl);
+}
+
+.cta-content h2 {
+    margin-bottom: var(--spacing-sm);
+}
+
+.cta-content p {
+    color: var(--color-text-secondary);
+    margin-bottom: var(--spacing-lg);
+}
+
+/* ================================================================
+   28. شريط التمرير المخصص (Custom Scrollbar)
+   ================================================================ */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(108, 99, 255, 0.3);
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(108, 99, 255, 0.5);
+}
+
+/* ================================================================
+   29. زر العودة للأعلى (Back to Top)
    ================================================================ */
 .back-to-top {
     position: fixed;
-    bottom: var(--spacing-lg);
-    left: var(--spacing-lg);
+    bottom: var(--spacing-xl);
+    left: var(--spacing-xl);
     display: none;
     z-index: 1000;
     border-radius: 50%;
-    width: 44px;
-    height: 44px;
+    width: 48px;
+    height: 48px;
     padding: 0;
     justify-content: center;
     align-items: center;
     box-shadow: var(--shadow);
+    background: var(--color-glass-bg);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--color-glass-border);
+    color: var(--color-text-primary);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.back-to-top:hover {
+    background: var(--color-primary);
+    color: white;
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-glow);
 }
 
 /* ================================================================
-   20. التجاوب (Responsive Design)
+   30. أدوات مساعدة (Utilities)
+   ================================================================ */
+.text-muted {
+    color: var(--color-text-muted);
+}
+.text-gold {
+    color: var(--color-gold);
+}
+.text-success {
+    color: var(--color-success);
+}
+.text-danger {
+    color: var(--color-danger);
+}
+.text-center {
+    text-align: center;
+}
+
+.mt-10 {
+    margin-top: 10px;
+}
+.mt-20 {
+    margin-top: 20px;
+}
+.mt-30 {
+    margin-top: 30px;
+}
+.mb-10 {
+    margin-bottom: 10px;
+}
+.mb-20 {
+    margin-bottom: 20px;
+}
+.mb-30 {
+    margin-bottom: 30px;
+}
+
+.flex {
+    display: flex;
+}
+.flex-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.flex-between {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.gap-10 {
+    gap: 10px;
+}
+.gap-20 {
+    gap: 20px;
+}
+.wrap {
+    flex-wrap: wrap;
+}
+
+.hidden {
+    display: none !important;
+}
+.overflow-x-auto {
+    overflow-x: auto;
+}
+.w-full {
+    width: 100%;
+}
+.max-w-800 {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+/* ================================================================
+   31. التجاوب (Responsive Design) - Mobile First
    ================================================================ */
 
 /* === الشاشات الكبيرة (أجهزة الكمبيوتر) === */
 @media (min-width: 1200px) {
     .main-content {
-        padding: var(--spacing-2xl) var(--spacing-2xl);
+        padding: var(--spacing-2xl) var(--spacing-3xl);
     }
 }
 
@@ -1106,13 +2538,24 @@ h4 {
     .topbar-search {
         max-width: 320px;
     }
+    .profile-container {
+        grid-template-columns: 1fr;
+    }
+    .about-content {
+        grid-template-columns: 1fr;
+    }
+    .user-details-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 /* === الشاشات الصغيرة (جوال) === */
 @media (max-width: 768px) {
     :root {
-        --topbar-height: 56px;
-        --sidebar-width: 260px;
+        --topbar-height: 60px;
+        --sidebar-width: 280px;
+        --font-size-3xl: 2rem;
+        --font-size-4xl: 2.2rem;
     }
 
     .sidebar {
@@ -1121,9 +2564,10 @@ h4 {
         height: 100vh;
         border-left: none;
         border-right: 1px solid var(--color-glass-border);
-        box-shadow: -4px 0 30px rgba(0, 0, 0, 0.5);
+        box-shadow: -4px 0 40px rgba(0, 0, 0, 0.5);
         padding: var(--spacing-md);
         width: var(--sidebar-width);
+        padding-top: var(--spacing-xl);
     }
 
     .sidebar.open {
@@ -1135,7 +2579,7 @@ h4 {
     }
 
     .sidebar-toggle {
-        display: block;
+        display: flex;
     }
 
     .main-content {
@@ -1158,6 +2602,14 @@ h4 {
         font-size: var(--font-size-lg);
     }
 
+    .topbar-logo i {
+        font-size: 1.4rem;
+    }
+
+    .topbar-logo span {
+        font-size: 1.1rem;
+    }
+
     .btn-text {
         display: none;
     }
@@ -1171,8 +2623,16 @@ h4 {
         gap: var(--spacing-sm);
     }
 
+    .subjects-grid {
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    }
+
+    .units-grid {
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    }
+
     .modal-card {
-        padding: var(--spacing-md);
+        padding: var(--spacing-lg);
         max-width: 95%;
     }
 
@@ -1180,7 +2640,6 @@ h4 {
         flex-direction: column;
     }
 
-    /* تحسينات جداول الإدارة للجوال */
     .admin-table {
         font-size: var(--font-size-sm);
         display: block;
@@ -1190,34 +2649,119 @@ h4 {
 
     .admin-table th,
     .admin-table td {
-        padding: 6px 8px;
+        padding: 6px 10px;
         font-size: var(--font-size-sm);
     }
 
     .admin-table .btn-sm {
-        font-size: var(--font-size-sm);
-        padding: 3px 8px;
-        margin: 1px;
+        font-size: var(--font-size-xs);
+        padding: 2px 8px;
     }
 
-    h1 {
-        font-size: var(--font-size-2xl);
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
     }
-    h2 {
+
+    .suggested-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .recent-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .progress-stats {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .admin-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .welcome-banner {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .quick-actions {
+        justify-content: center;
+    }
+
+    .hero-content h1 {
+        font-size: var(--font-size-3xl);
+    }
+
+    .features-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .lesson-item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .lesson-item .lesson-right {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .exam-option {
+        padding: 10px 14px;
+    }
+
+    .admin-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .admin-controls .search-box {
+        width: 100%;
+    }
+
+    .admin-controls .filter-buttons {
+        justify-content: center;
+    }
+
+    .user-details-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .stat-card {
+        padding: var(--spacing-md);
+    }
+
+    .stat-card .stat-value {
         font-size: var(--font-size-xl);
+    }
+
+    .exam-result-card {
+        padding: var(--spacing-lg);
+    }
+
+    .exam-result-card .result-score {
+        font-size: 3rem;
     }
 }
 
 /* === الشاشات الصغيرة جداً (هواتف صغيرة) === */
 @media (max-width: 480px) {
+    :root {
+        --font-size-2xl: 1.4rem;
+        --font-size-xl: 1.1rem;
+        --font-size-lg: 1rem;
+    }
+
     .topbar-logo {
         font-size: var(--font-size-base);
     }
     .topbar-logo i {
         font-size: 1.2rem;
     }
+    .topbar-logo span {
+        font-size: 0.95rem;
+    }
 
-    .grade-card .grade-num {
+    .grade-card .grade-icon {
         font-size: var(--font-size-xl);
     }
     .grade-card .grade-label {
@@ -1237,119 +2781,209 @@ h4 {
         padding: 6px 14px;
     }
 
-    .subject-card,
-    .unit-card,
-    .lesson-card {
-        flex-direction: column;
-        align-items: flex-start;
+    .btn-large {
+        padding: 10px 24px;
+        font-size: var(--font-size-base);
+    }
+
+    .modal-card {
+        padding: var(--spacing-md);
+    }
+
+    .grades-grid {
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
         gap: var(--spacing-xs);
+    }
+
+    .subjects-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .units-grid {
+        grid-template-columns: 1fr 1fr;
     }
 
     .grades-checkboxes {
         grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
     }
 
-    /* تحسينات إضافية للجداول في الشاشات الصغيرة جداً */
+    .stats-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: var(--spacing-sm);
+    }
+
+    .stat-card {
+        padding: var(--spacing-sm);
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .stat-card .stat-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 1.2rem;
+    }
+
     .admin-table th,
     .admin-table td {
         padding: 4px 6px;
-        font-size: 0.7rem;
+        font-size: 0.65rem;
     }
 
     .admin-table .btn-sm {
-        font-size: 0.65rem;
-        padding: 2px 6px;
+        font-size: 0.6rem;
+        padding: 1px 6px;
+    }
+
+    .admin-stats {
+        grid-template-columns: 1fr 1fr;
+        gap: var(--spacing-sm);
+    }
+
+    .admin-stat-card {
+        padding: var(--spacing-sm);
+    }
+
+    .admin-stat-card .stat-number {
+        font-size: var(--font-size-xl);
+    }
+
+    .feature-card {
+        padding: var(--spacing-md);
+    }
+
+    .feature-card .feature-icon {
+        font-size: 1.8rem;
+    }
+
+    .profile-card {
+        padding: var(--spacing-md);
+    }
+
+    .progress-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .exam-option {
+        padding: 8px 12px;
+        font-size: var(--font-size-sm);
+    }
+
+    .exam-option .option-text {
+        font-size: var(--font-size-sm);
+    }
+
+    .hero-section {
+        padding: var(--spacing-xl) var(--spacing-md);
+    }
+
+    .cta-section {
+        padding: var(--spacing-xl) var(--spacing-md);
+    }
+
+    .content-grade-card {
+        padding: var(--spacing-md);
+    }
+
+    .content-subjects {
+        padding-right: var(--spacing-sm);
+    }
+
+    .content-units {
+        padding-right: var(--spacing-md);
+    }
+
+    .content-lessons {
+        padding-right: var(--spacing-md);
+    }
+
+    .unit-exam-section {
+        padding: var(--spacing-md);
+    }
+}
+
+/* === دعم الشاشات الكبيرة جداً === */
+@media (min-width: 1600px) {
+    .main-content {
+        padding: var(--spacing-3xl);
     }
 }
 
 /* ================================================================
-   21. شريط التمرير المخصص (Custom Scrollbar)
+   32. تأثيرات إضافية (Extra Effects)
    ================================================================ */
-::-webkit-scrollbar {
-    width: 5px;
-    height: 5px;
+.shimmer {
+    background: linear-gradient(90deg,
+            rgba(255, 255, 255, 0.03) 25%,
+            rgba(255, 255, 255, 0.06) 50%,
+            rgba(255, 255, 255, 0.03) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
 }
 
-::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.03);
+@keyframes shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+    100% {
+        background-position: 200% 0;
+    }
 }
 
-::-webkit-scrollbar-thumb {
-    background: rgba(108, 99, 255, 0.4);
-    border-radius: 3px;
+.pulse {
+    animation: pulse 2s infinite;
 }
 
-::-webkit-scrollbar-thumb:hover {
-    background: rgba(108, 99, 255, 0.6);
+@keyframes pulse {
+    0%,
+    100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.6;
+    }
 }
 
 /* ================================================================
-   22. أدوات مساعدة (Utilities)
+   33. دعم الطباعة (Print Styles)
    ================================================================ */
-.text-center {
-    text-align: center;
-}
+@media print {
+    .topbar,
+    .sidebar,
+    .back-to-top,
+    .btn,
+    .no-print {
+        display: none !important;
+    }
 
-.text-muted {
-    color: var(--color-text-muted);
-}
+    .main-content {
+        margin: 0 !important;
+        padding: 20px !important;
+        width: 100% !important;
+    }
 
-.text-gold {
-    color: var(--color-gold);
-}
+    body {
+        background: white !important;
+        color: black !important;
+    }
 
-.text-success {
-    color: var(--color-success);
-}
+    .glass-card,
+    .lesson-video-section,
+    .lesson-text-section {
+        background: white !important;
+        border: 1px solid #ddd !important;
+        box-shadow: none !important;
+    }
 
-.text-danger {
-    color: var(--color-danger);
-}
+    h1,
+    h2,
+    h3 {
+        color: black !important;
+        -webkit-text-fill-color: black !important;
+        background: none !important;
+    }
 
-.mt-10 {
-    margin-top: 10px;
-}
-.mt-20 {
-    margin-top: 20px;
-}
-.mb-10 {
-    margin-bottom: 10px;
-}
-.mb-20 {
-    margin-bottom: 20px;
-}
-
-.flex {
-    display: flex;
-}
-.flex-center {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-.gap-10 {
-    gap: 10px;
-}
-.gap-20 {
-    gap: 20px;
-}
-.wrap {
-    flex-wrap: wrap;
-}
-
-.hidden {
-    display: none !important;
-}
-
-.overflow-x-auto {
-    overflow-x: auto;
-}
-
-.w-full {
-    width: 100%;
-}
-
-.max-w-800 {
-    max-width: 800px;
-    margin: 0 auto;
+    .lesson-text-content {
+        color: #333 !important;
+    }
 }
